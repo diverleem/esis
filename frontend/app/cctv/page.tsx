@@ -10,7 +10,7 @@ export default function CCTVPage() {
             <h2 className="text-lg font-medium mb-3 text-neutral-200 text-center">Camera 01</h2>
             <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-inner">
               <iframe 
-                src="http://stream.ucim.my.id/cam01" 
+                src="https://stream.ucim.my.id/cam01" 
                 className="w-full h-full border-none"
                 allowFullScreen
                 title="CCTV Camera 01"
@@ -23,7 +23,7 @@ export default function CCTVPage() {
             <h2 className="text-lg font-medium mb-3 text-neutral-200 text-center">Camera 02</h2>
             <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-inner">
               <iframe 
-                src="http://stream.ucim.my.id/cam02" 
+                src="https://stream.ucim.my.id/cam02" 
                 className="w-full h-full border-none"
                 allowFullScreen
                 title="CCTV Camera 02"
