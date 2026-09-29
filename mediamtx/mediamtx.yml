@@ -882,6 +882,6 @@ pathDefaults:
 # webrtcLocalUDPAddress: :8189
 paths:
     cam01:
-        source: rtsp://192.168.137.39/live/ch00_0
+        source: rtsp://192.168.137.196/live/ch00_0
     cam02:
-        source: rtsp://192.168.137.75/live/ch00_0
+        source: rtsp://192.168.137.251/live/ch00_0
