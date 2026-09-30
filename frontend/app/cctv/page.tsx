@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function CCTVPage() {
     const cameras = [
         { id: 1, name: "Lab Sisdig", url: "https://stream.ucim.my.id/cam_lab_sisdig" },
@@ -7,21 +9,27 @@ export default function CCTVPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white p-4 sm:p-6 lg:p-8">
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header Section */}
-                <div className="flex flex-col sm:flex-row items-center justify-between border-b border-neutral-800 pb-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 pb-6 gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-white mb-2 text-center sm:text-left">
+                        <Link href="/" className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 mb-4 transition-colors">
+                            <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Kembali ke Home
+                        </Link>
+                        <h1 className="text-3xl font-extrabold tracking-tight text-blue-900 mb-2">
                             Live CCTV Monitoring
                         </h1>
-                        <p className="text-neutral-400 text-sm text-center sm:text-left">
+                        <p className="text-slate-500 text-sm">
                             Real-time camera feeds from laboratory facilities
                         </p>
                     </div>
-                    <div className="mt-4 sm:mt-0 flex items-center space-x-2 bg-neutral-900 px-4 py-2 rounded-full border border-neutral-800">
+                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-sm font-medium text-neutral-300">System Online</span>
+                        <span className="text-sm font-semibold text-slate-700">System Online</span>
                     </div>
                 </div>
 
@@ -30,21 +38,21 @@ export default function CCTVPage() {
                     {cameras.map((cam) => (
                         <div
                             key={cam.id}
-                            className="group relative bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl transition-all duration-300 hover:border-neutral-700 hover:shadow-2xl"
+                            className="group relative bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:border-blue-300 hover:shadow-lg"
                         >
                             {/* Overlay Header on top of stream */}
-                            <div className="absolute top-0 left-0 w-full p-4 flex items-center justify-between z-10 bg-gradient-to-b from-black/90 via-black/40 to-transparent pointer-events-none">
+                            <div className="absolute top-0 left-0 w-full p-4 flex items-center justify-between z-10 bg-gradient-to-b from-black/70 via-black/30 to-transparent pointer-events-none">
                                 <div className="flex items-center space-x-3">
-                                    <h2 className="text-lg font-semibold text-white drop-shadow-md">{cam.name}</h2>
+                                    <h2 className="text-lg font-bold text-white drop-shadow-md">{cam.name}</h2>
                                 </div>
-                                <div className="flex items-center space-x-1.5 bg-red-500/20 backdrop-blur-sm px-2.5 py-1 rounded-md border border-red-500/30">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-                                    <span className="text-xs font-bold text-red-500 tracking-wider">LIVE</span>
+                                <div className="flex items-center space-x-1.5 bg-red-500/90 backdrop-blur-sm px-2.5 py-1 rounded-md shadow-sm">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                    <span className="text-xs font-bold text-white tracking-wider">LIVE</span>
                                 </div>
                             </div>
 
                             {/* Stream Container */}
-                            <div className="w-full aspect-video bg-black relative">
+                            <div className="w-full aspect-video bg-slate-900 relative">
                                 <iframe
                                     src={cam.url}
                                     className="w-full h-full border-none absolute inset-0"
@@ -54,11 +62,11 @@ export default function CCTVPage() {
                             </div>
 
                             {/* Footer Status */}
-                            <div className="px-4 py-3 bg-neutral-900 border-t border-neutral-800 flex justify-between items-center text-xs text-neutral-500 font-mono">
-                                <span>CAM_{cam.id.toString().padStart(2, "0")}</span>
-                                <span className="flex items-center space-x-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                    <span>Signal OK</span>
+                            <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500 font-mono">
+                                <span className="font-semibold text-slate-600">CAM_{cam.id.toString().padStart(2, "0")}</span>
+                                <span className="flex items-center space-x-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                    <span className="font-medium text-slate-600">Signal OK</span>
                                 </span>
                             </div>
                         </div>
