@@ -1,4 +1,7 @@
+"use client";
+
 import Link from 'next/link';
+import { useState } from 'react';
 
 export default function CCTVPage() {
     const cameras = [
@@ -8,11 +11,16 @@ export default function CCTVPage() {
         { id: 4, name: "Lab Riset", url: "https://stream.ucim.my.id/cam_lab_riset" },
     ];
 
+    const [viewMode, setViewMode] = useState<"all" | "single">("all");
+    const [selectedCamId, setSelectedCamId] = useState<number>(1);
+
+    const activeCamera = cameras.find(c => c.id === selectedCamId) || cameras[0];
+
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header Section */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 pb-6 gap-4">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-200 pb-6 gap-4">
                     <div>
                         <Link href="/" className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 mb-4 transition-colors">
                             <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -27,18 +35,55 @@ export default function CCTVPage() {
                             Real-time camera feeds from laboratory facilities
                         </p>
                     </div>
-                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-sm font-semibold text-slate-700">System Online</span>
+                    <div className="flex flex-col items-start md:items-end gap-4 w-full md:w-auto">
+                        <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span className="text-sm font-semibold text-slate-700">System Online</span>
+                        </div>
+                        
+                        {/* Mode Switcher */}
+                        <div className="flex bg-slate-200 p-1 rounded-lg w-full md:w-auto">
+                            <button 
+                                onClick={() => setViewMode("all")}
+                                className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-md transition-colors ${viewMode === "all" ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+                            >
+                                Tampil Semua
+                            </button>
+                            <button 
+                                onClick={() => setViewMode("single")}
+                                className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-md transition-colors ${viewMode === "single" ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+                            >
+                                Tampil 1 per 1
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                {/* CCTV Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-                    {cameras.map((cam) => (
+                {/* Single View Mode - Camera Selector */}
+                {viewMode === "single" && (
+                    <div className="flex flex-wrap gap-2 mb-2 justify-center md:justify-start">
+                        {cameras.map((cam) => (
+                            <button
+                                key={cam.id}
+                                onClick={() => setSelectedCamId(cam.id)}
+                                className={`px-5 py-2.5 rounded-full text-sm font-medium border transition-all ${
+                                    selectedCamId === cam.id 
+                                        ? "bg-blue-600 text-white border-blue-600 shadow-md" 
+                                        : "bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:bg-blue-50"
+                                }`}
+                            >
+                                {cam.name}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* CCTV Grid or Single View */}
+                <div className={viewMode === "all" ? "grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8" : "w-full max-w-4xl mx-auto"}>
+                    {(viewMode === "all" ? cameras : [activeCamera]).map((cam) => (
                         <div
                             key={cam.id}
-                            className="group relative bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:border-blue-300 hover:shadow-lg"
+                            className={`group relative bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:border-blue-300 hover:shadow-lg ${viewMode === "single" ? "shadow-md" : ""}`}
                         >
                             {/* Overlay Header on top of stream */}
                             <div className="absolute top-0 left-0 w-full p-4 flex items-center justify-between z-10 bg-gradient-to-b from-black/70 via-black/30 to-transparent pointer-events-none">
