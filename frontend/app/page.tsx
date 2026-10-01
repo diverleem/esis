@@ -1,48 +1,93 @@
-import Link from 'next/link';
+import Link from "next/link";
+import { Camera, AlertTriangle, BarChart3, Settings } from "lucide-react";
 
 export default function Home() {
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-6 md:p-12">
-      <main className="max-w-5xl mx-auto space-y-12 mt-10">
-        <header className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-blue-900 tracking-tight">
-            Sistem Informasi <span className="text-blue-600">Terpadu</span>
-          </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Selamat datang di Dashboard Utama. Pantau fasilitas dan layanan secara real-time.
-          </p>
-        </header>
+    return (
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-6 md:p-12">
+            <main className="max-w-5xl mx-auto space-y-12 mt-10">
+                <header className="text-center space-y-4">
+                    <div className="inline-block px-4 py-1.5 bg-blue-100 text-blue-700 font-medium rounded-full text-sm mb-4">
+                        Pusat Lab Terpadu (PLT)
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
+                        E.S.I.S <br />
+                        <span className="text-2xl md:text-3xl text-blue-600 mt-2 block font-bold">
+                            Electronic Smoking Identification System
+                        </span>
+                    </h1>
+                    <p className="text-lg text-slate-600 max-w-2xl mx-auto mt-4">
+                        Platform monitoring pintar berbasis Computer Vision untuk mendeteksi dan mencatat aktivitas merokok di lingkungan laboratorium komputer.
+                    </p>
+                </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Link href="/cctv" className="group block bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-300">
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="p-3 bg-blue-50 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-slate-800">Live CCTV</h2>
-            </div>
-            <p className="text-slate-600 leading-relaxed">
-              Pantau seluruh kamera laboratorium (Lab Sisdig, Lab OS, Lab Programming, Lab Riset) secara real-time.
-            </p>
-          </Link>
-          
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 opacity-70 cursor-not-allowed">
-             <div className="flex items-center space-x-4 mb-4">
-              <div className="p-3 bg-slate-100 rounded-xl text-slate-500">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-slate-500">Menu Mendatang</h2>
-            </div>
-            <p className="text-slate-500 leading-relaxed">
-              Modul tambahan akan tersedia di pembaruan selanjutnya.
-            </p>
-          </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Live CCTV Card */}
+                    <Link
+                        href="/cctv"
+                        className="group block bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-lg hover:border-blue-400 hover:ring-1 hover:ring-blue-400 transition-all duration-300 relative overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-10 group-hover:bg-blue-100 transition-colors"></div>
+                        <div className="flex items-center space-x-4 mb-4">
+                            <div className="p-3 bg-blue-100 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <Camera className="w-6 h-6" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-800">Live CCTV</h2>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed mb-4">
+                            Pantau langsung streaming CCTV dari seluruh area laboratorium (Lab Sisdig, OS, Programming, Riset) secara real-time.
+                        </p>
+                        <div className="flex items-center text-blue-600 font-medium group-hover:translate-x-1 transition-transform">
+                            Akses Kamera &rarr;
+                        </div>
+                    </Link>
+
+                    {/* Riwayat Pelanggaran Card */}
+                    <Link
+                        href="/violation"
+                        className="group block bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-lg hover:border-red-400 hover:ring-1 hover:ring-red-400 transition-all duration-300 relative overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-bl-full -z-10 group-hover:bg-red-100 transition-colors"></div>
+                        <div className="flex items-center space-x-4 mb-4">
+                            <div className="p-3 bg-red-100 rounded-xl text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors">
+                                <AlertTriangle className="w-6 h-6" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-800">Data Pelanggaran</h2>
+                        </div>
+                        <p className="text-slate-600 leading-relaxed mb-4">
+                            Tinjau hasil deteksi aktivitas merokok dari AI, verifikasi pelanggar, dan terbitkan surat peringatan.
+                        </p>
+                        <div className="flex items-center text-red-600 font-medium group-hover:translate-x-1 transition-transform">
+                            Lihat Log Pelanggaran &rarr;
+                        </div>
+                    </Link>
+
+                    {/* Statistik Dashboard Card (Upcoming) */}
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 opacity-75">
+                        <div className="flex items-center space-x-4 mb-4">
+                            <div className="p-3 bg-slate-100 rounded-xl text-slate-500">
+                                <BarChart3 className="w-6 h-6" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-500">Statistik (Segera)</h2>
+                        </div>
+                        <p className="text-slate-500 leading-relaxed">
+                            Dashboard analitik untuk melihat tren pelanggaran per laboratorium dalam periode tertentu.
+                        </p>
+                    </div>
+
+                    {/* Pengaturan Card (Upcoming) */}
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 opacity-75">
+                        <div className="flex items-center space-x-4 mb-4">
+                            <div className="p-3 bg-slate-100 rounded-xl text-slate-500">
+                                <Settings className="w-6 h-6" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-500">Pengaturan Sistem</h2>
+                        </div>
+                        <p className="text-slate-500 leading-relaxed">
+                            Kelola konfigurasi MediaMTX, tambah/hapus titik kamera CCTV, dan kelola akses pengguna.
+                        </p>
+                    </div>
+                </div>
+            </main>
         </div>
-      </main>
-    </div>
-  );
+    );
 }
