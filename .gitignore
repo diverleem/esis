@@ -1,3 +1,4 @@
-# files that shouldnt push to github
+# files or folders that shouldnt push to github
 ./reference
 ./mediamtx
+./.gitignore
