@@ -560,4 +560,10 @@ Jika terdapat beberapa solusi teknis yang memungkinkan, prioritaskan solusi yang
 
 Jangan mengubah arsitektur utama hanya untuk menyelesaikan masalah kecil.
 
+# 23. UI
+Untuk contoh UI, dapat dilihat di reference/uiReference. Terdapat beberapa gambar contoh UI yang saya pikir cocok. Untuk detailnya, dapat dilihat pada link website berikut
+Login Page: https://tailwindflex.com/@gmer33/login-form-7
+Main Dashboard: https://themewagon.com/themes/horizon-next/
+
+
 <!-- END:nextjs-agent-rules -->

@@ -17,41 +17,42 @@ export default function CCTVPage() {
     const activeCamera = cameras.find(c => c.id === selectedCamId) || cameras[0];
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 sm:p-6 lg:p-8">
+        <div className="text-slate-900 dark:text-white font-sans p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-200 pb-6 gap-4">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-200 dark:border-neutral-800 pb-6 gap-4">
                     <div>
-                        <Link href="/" className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 mb-4 transition-colors">
+                        {/* Tombol kembali ke halaman Dashboard Utama */}
+                        <Link href="/" className="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-4 transition-colors">
                             <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            Kembali ke Home
+                            Kembali ke Dashboard
                         </Link>
-                        <h1 className="text-3xl font-extrabold tracking-tight text-blue-900 mb-2">
+                        <h1 className="text-3xl font-extrabold tracking-tight text-blue-900 dark:text-white mb-2">
                             Live CCTV Monitoring
                         </h1>
-                        <p className="text-slate-500 text-sm">
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">
                             Real-time camera feeds from laboratory facilities
                         </p>
                     </div>
                     <div className="flex flex-col items-start md:items-end gap-4 w-full md:w-auto">
-                        <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+                        <div className="flex items-center space-x-2 bg-white dark:bg-neutral-900 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
                             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span className="text-sm font-semibold text-slate-700">System Online</span>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">System Online</span>
                         </div>
                         
                         {/* Mode Switcher */}
-                        <div className="flex bg-slate-200 p-1 rounded-lg w-full md:w-auto">
+                        <div className="flex bg-slate-200 dark:bg-neutral-900 p-1 rounded-lg w-full md:w-auto transition-colors">
                             <button 
                                 onClick={() => setViewMode("all")}
-                                className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-md transition-colors ${viewMode === "all" ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+                                className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-md transition-colors ${viewMode === "all" ? "bg-white dark:bg-neutral-900 text-blue-700 dark:text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                             >
                                 Tampil Semua
                             </button>
                             <button 
                                 onClick={() => setViewMode("single")}
-                                className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-md transition-colors ${viewMode === "single" ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+                                className={`flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-md transition-colors ${viewMode === "single" ? "bg-white dark:bg-neutral-900 text-blue-700 dark:text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                             >
                                 Tampil 1 per 1
                             </button>
@@ -68,8 +69,8 @@ export default function CCTVPage() {
                                 onClick={() => setSelectedCamId(cam.id)}
                                 className={`px-5 py-2.5 rounded-full text-sm font-medium border transition-all ${
                                     selectedCamId === cam.id 
-                                        ? "bg-blue-600 text-white border-blue-600 shadow-md" 
-                                        : "bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:bg-blue-50"
+                                        ? "bg-blue-600 dark:bg-blue-600 text-white border-blue-600 shadow-md" 
+                                        : "bg-white dark:bg-neutral-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-slate-900"
                                 }`}
                             >
                                 {cam.name}
@@ -83,7 +84,7 @@ export default function CCTVPage() {
                     {(viewMode === "all" ? cameras : [activeCamera]).map((cam) => (
                         <div
                             key={cam.id}
-                            className={`group relative bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:border-blue-300 hover:shadow-lg ${viewMode === "single" ? "shadow-md" : ""}`}
+                            className={`group relative bg-white dark:bg-neutral-900 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg ${viewMode === "single" ? "shadow-md" : ""}`}
                         >
                             {/* Overlay Header on top of stream */}
                             <div className="absolute top-0 left-0 w-full p-4 flex items-center justify-between z-10 bg-gradient-to-b from-black/70 via-black/30 to-transparent pointer-events-none">
@@ -107,11 +108,11 @@ export default function CCTVPage() {
                             </div>
 
                             {/* Footer Status */}
-                            <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500 font-mono">
-                                <span className="font-semibold text-slate-600">CAM_{cam.id.toString().padStart(2, "0")}</span>
+                            <div className="px-4 py-3 bg-slate-50 dark:bg-neutral-950 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs text-slate-500 font-mono transition-colors">
+                                <span className="font-semibold text-slate-600 dark:text-slate-400">CAM_{cam.id.toString().padStart(2, "0")}</span>
                                 <span className="flex items-center space-x-1.5">
                                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                    <span className="font-medium text-slate-600">Signal OK</span>
+                                    <span className="font-medium text-slate-600 dark:text-slate-400">Signal OK</span>
                                 </span>
                             </div>
                         </div>
