@@ -22,6 +22,7 @@ export default function CCTVPage() {
 
     const [viewMode, setViewMode] = useState<"all" | "single">("all");
     const [selectedCamId, setSelectedCamId] = useState<number>(1);
+    const [isHDMode, setIsHDMode] = useState<boolean>(false);
 
     const activeCamera = cameras.find((c) => c.id === selectedCamId) || cameras[0];
 
@@ -54,9 +55,27 @@ export default function CCTVPage() {
                         </p>
                     </div>
                     <div className="flex flex-col items-start md:items-end gap-3 w-full md:w-auto">
-                        <div className="flex items-center space-x-2 bg-white dark:bg-neutral-900 px-3 py-1.5 rounded-full border border-slate-200 dark:border-neutral-700 shadow-sm transition-colors">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">System Online</span>
+                        <div className="flex flex-wrap items-center justify-end gap-2 w-full">
+                            <div className="flex items-center space-x-2 bg-white dark:bg-neutral-900 px-3 py-1.5 rounded-full border border-slate-200 dark:border-neutral-700 shadow-sm transition-colors">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">System Online</span>
+                            </div>
+
+                            {/* HD Toggle */}
+                            <div className="flex items-center space-x-2 bg-white dark:bg-neutral-900 px-3 py-1.5 rounded-full border border-slate-200 dark:border-neutral-700 shadow-sm transition-colors">
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={isHDMode}
+                                        onChange={() => setIsHDMode(!isHDMode)}
+                                    />
+                                    <div className="w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-neutral-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                    <span className="ml-2 text-[13px] font-semibold text-slate-700 dark:text-slate-200">
+                                        HD Mode
+                                    </span>
+                                </label>
+                            </div>
                         </div>
 
                         {/* Mode Switcher */}
@@ -119,7 +138,7 @@ export default function CCTVPage() {
                             {/* Stream Container */}
                             <div className="w-full aspect-video bg-neutral-950 relative">
                                 <iframe
-                                    src={cam.url}
+                                    src={isHDMode ? cam.url : cam.url.replace("stream.ucim.my.id/cam_", "stream.ucim.my.id/Ecam_")}
                                     className="w-full h-full border-none absolute inset-0"
                                     allowFullScreen
                                     title={`CCTV Camera ${cam.name}`}
