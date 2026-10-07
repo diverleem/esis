@@ -1,20 +1,29 @@
 "use client";
 
-import Link from 'next/link';
-import { useState } from 'react';
+import Link from "next/link";
+import { useState } from "react";
 
 export default function CCTVPage() {
     const cameras = [
         { id: 1, name: "Lab Sisdig", url: "https://stream.ucim.my.id/cam_lab_sisdig" },
         { id: 2, name: "Lab OS", url: "https://stream.ucim.my.id/cam_lab_os" },
         { id: 3, name: "Lab Programming", url: "https://stream.ucim.my.id/cam_lab_programming" },
-        { id: 4, name: "Lab Riset", url: "https://stream.ucim.my.id/cam_lab_riset" },
+        { id: 4, name: "Lab Riset Lt 5", url: "https://stream.ucim.my.id/cam_lab_riset_lt5" },
+        { id: 5, name: "Lab ELC", url: "https://stream.ucim.my.id/cam_lab_elc" },
+        { id: 6, name: "Lab Jaringan", url: "https://stream.ucim.my.id/cam_lab_jaringan" },
+        { id: 7, name: "Lab Multimedia 1", url: "https://stream.ucim.my.id/cam_lab_multimedia1" },
+        { id: 8, name: "Lab Multimedia 2", url: "https://stream.ucim.my.id/cam_lab_multimedia2" },
+        { id: 9, name: "Lab APL 1", url: "https://stream.ucim.my.id/cam_lab_apl1" },
+        { id: 10, name: "Lab APL 2", url: "https://stream.ucim.my.id/cam_lab_apl2" },
+        { id: 11, name: "Lab Riset Lt 6", url: "https://stream.ucim.my.id/cam_lab_riset_lt6" },
+        { id: 12, name: "Lab Tambang", url: "https://stream.ucim.my.id/cam_lab_tambang" },
+        { id: 13, name: "Lab Matematika", url: "https://stream.ucim.my.id/cam_lab_mtk" },
     ];
 
     const [viewMode, setViewMode] = useState<"all" | "single">("all");
     const [selectedCamId, setSelectedCamId] = useState<number>(1);
 
-    const activeCamera = cameras.find(c => c.id === selectedCamId) || cameras[0];
+    const activeCamera = cameras.find((c) => c.id === selectedCamId) || cameras[0];
 
     return (
         <div className="text-slate-900 dark:text-white font-sans p-4 sm:p-5 lg:p-6">
@@ -23,9 +32,17 @@ export default function CCTVPage() {
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-200 dark:border-neutral-800 pb-5 gap-4">
                     <div>
                         {/* Tombol kembali ke halaman Dashboard Utama */}
-                        <Link href="/" className="inline-flex items-center text-[13px] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-3 transition-colors">
+                        <Link
+                            href="/"
+                            className="inline-flex items-center text-[13px] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-3 transition-colors"
+                        >
                             <svg className="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                                />
                             </svg>
                             Kembali ke Dashboard
                         </Link>
@@ -41,16 +58,16 @@ export default function CCTVPage() {
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">System Online</span>
                         </div>
-                        
+
                         {/* Mode Switcher */}
                         <div className="flex bg-slate-200 dark:bg-neutral-800 p-1 rounded-lg w-full md:w-auto transition-colors">
-                            <button 
+                            <button
                                 onClick={() => setViewMode("all")}
                                 className={`flex-1 md:flex-none px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors ${viewMode === "all" ? "bg-white dark:bg-neutral-900 text-blue-700 dark:text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                             >
                                 Tampil Semua
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setViewMode("single")}
                                 className={`flex-1 md:flex-none px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors ${viewMode === "single" ? "bg-white dark:bg-neutral-900 text-blue-700 dark:text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                             >
@@ -68,8 +85,8 @@ export default function CCTVPage() {
                                 key={cam.id}
                                 onClick={() => setSelectedCamId(cam.id)}
                                 className={`px-4 py-2 rounded-full text-[13px] font-medium border transition-all ${
-                                    selectedCamId === cam.id 
-                                        ? "bg-blue-600 dark:bg-blue-600 text-white border-blue-600 shadow-md" 
+                                    selectedCamId === cam.id
+                                        ? "bg-blue-600 dark:bg-blue-600 text-white border-blue-600 shadow-md"
                                         : "bg-white dark:bg-neutral-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-neutral-800"
                                 }`}
                             >
@@ -80,7 +97,9 @@ export default function CCTVPage() {
                 )}
 
                 {/* CCTV Grid or Single View */}
-                <div className={viewMode === "all" ? "grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6" : "w-full max-w-3xl mx-auto"}>
+                <div
+                    className={viewMode === "all" ? "grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6" : "w-full max-w-3xl mx-auto"}
+                >
                     {(viewMode === "all" ? cameras : [activeCamera]).map((cam) => (
                         <div
                             key={cam.id}
@@ -109,7 +128,9 @@ export default function CCTVPage() {
 
                             {/* Footer Status */}
                             <div className="px-3 py-2 bg-slate-50 dark:bg-neutral-950 border-t border-slate-200 dark:border-neutral-800 flex justify-between items-center text-[11px] text-slate-500 font-mono transition-colors">
-                                <span className="font-semibold text-slate-600 dark:text-slate-400">CAM_{cam.id.toString().padStart(2, "0")}</span>
+                                <span className="font-semibold text-slate-600 dark:text-slate-400">
+                                    CAM_{cam.id.toString().padStart(2, "0")}
+                                </span>
                                 <span className="flex items-center space-x-1.5">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                     <span className="font-medium text-slate-600 dark:text-slate-400">Signal OK</span>
