@@ -1,32 +1,33 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { verifySession } from '@/utils/auth';
 
-// Middleware ini akan dijalankan pada setiap request (sesuai config matcher)
-export function middleware(request: NextRequest) {
-    // Mengecek apakah cookie otentikasi ('is_logged_in') ada
-    const isLoggedIn = request.cookies.has('is_logged_in');
-    
-    // Mendapatkan URL saat ini
+// Middleware ini akan dijalankan pada setiap request yang cocok dengan matcher
+export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+    const token = request.cookies.get('session_token')?.value;
 
-    // Jika pengguna belum login dan mencoba mengakses halaman selain login,
-    // maka arahkan secara paksa (redirect) ke halaman /login
+    let session = null;
+    if (token) {
+        session = await verifySession(token);
+    }
+
+    const isLoggedIn = !!session;
+
+    // Jika pengguna belum login dan mencoba mengakses rute terproteksi (selain /login)
     if (!isLoggedIn && !pathname.startsWith('/login')) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // Jika pengguna sudah login tapi mencoba mengakses halaman login,
-    // maka arahkan kembali ke halaman utama (dashboard)
+    // Jika pengguna sudah login tapi mencoba mengakses halaman login
     if (isLoggedIn && pathname.startsWith('/login')) {
         return NextResponse.redirect(new URL('/', request.url));
     }
 
-    // Lanjutkan request seperti biasa jika tidak ada masalah
     return NextResponse.next();
 }
 
-// Menentukan rute mana saja yang akan dicek oleh middleware ini
 export const config = {
-    // Konfigurasi matcher: Terapkan ke semua rute KECUALI api, _next/static, _next/image, favicon.ico
+    // Terapkan ke semua rute KECUALI api, _next/static, _next/image, favicon.ico
     matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };

@@ -1,117 +1,185 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { User, Lock, AlertCircle, Loader2, Shield, Eye, EyeOff, Video } from "lucide-react";
 
 export default function LoginPage() {
-    // State untuk email dan password form
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
 
-    // Fungsi submit form login
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setErrorMsg("");
+        setIsLoading(true);
 
-        // Simulasikan login dengan mengeset cookie
-        document.cookie = "is_logged_in=true; path=/; max-age=86400";
-        // Arahkan ke dashboard (root) dengan full reload agar middleware berjalan baik
-        window.location.href = "/";
+        try {
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                setErrorMsg(data.message || "Gagal masuk. Periksa username dan kata sandi Anda.");
+                setIsLoading(false);
+                return;
+            }
+
+            // Redirect ke dashboard
+            window.location.href = "/";
+        } catch {
+            setErrorMsg("Gagal terhubung ke server. Silakan coba lagi nanti.");
+            setIsLoading(false);
+        }
     };
 
     return (
-        // Container utama full layar dengan flex layout dan tidak bisa di-scroll
-        <div className="h-screen w-full flex overflow-hidden bg-white dark:bg-neutral-950">
-            {/* Sisi Kiri: Gambar Background (Tersembunyi di layar kecil) */}
-            <div className="hidden lg:block lg:w-1/2 relative bg-slate-900 h-full">
-                <Image
-                    src="https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=2000&auto=format&fit=crop"
-                    alt="Login Background"
-                    fill
-                    className="object-cover opacity-80"
-                    priority
-                />
+        <div className="h-screen w-full flex overflow-hidden bg-slate-100 dark:bg-neutral-950 font-sans">
+            {/* Sisi Kiri: Branding VMS & Layanan Akademik Laboratorium */}
+            <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 text-white flex-col justify-between p-12 border-r border-slate-800">
+                {/* Background Pattern halus & bernuansa surveillance */}
+                <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-40"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent"></div>
+
+                {/* Header Kiri */}
+                <div className="relative z-10 flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md">
+                        <Shield className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-extrabold tracking-tight">E.S.I.S</h2>
+                        <p className="text-xs text-slate-400">Pusat Laboratorium Terpadu</p>
+                    </div>
+                </div>
+
+                {/* Tengah: Ringkasan Sistem */}
+                <div className="relative z-10 max-w-md space-y-4">
+                    <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-900/60 border border-blue-700/60 text-blue-300 text-xs font-semibold">
+                        <Video className="w-3.5 h-3.5" />
+                        <span>Sistem Manajemen Video & KTR</span>
+                    </div>
+                    <h1 className="text-3xl font-extrabold tracking-tight leading-tight text-white">
+                        Pengawasan Kawasan Tanpa Rokok Laboratorium Kampus
+                    </h1>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                        Sistem pemantauan CCTV streaming real-time terintegrasi dengan Computer Vision untuk deteksi aktivitas merokok dan penegakan tata tertib akademik.
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-3 pt-3 text-xs font-mono">
+                        <div className="bg-slate-800/80 border border-slate-700/70 p-3 rounded-lg">
+                            <span className="text-slate-400 block text-[11px]">Kamera CCTV Lab:</span>
+                            <span className="text-white font-bold text-sm">13 Titik Pantau</span>
+                        </div>
+                        <div className="bg-slate-800/80 border border-slate-700/70 p-3 rounded-lg">
+                            <span className="text-slate-400 block text-[11px]">Protokol Stream:</span>
+                            <span className="text-white font-bold text-sm">WebRTC MediaMTX</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer Kiri */}
+                <div className="relative z-10 text-xs text-slate-500 font-medium">
+                    Prototype Skripsi S1 Teknik Informatika • Hak Akses Terbatas Operator
+                </div>
             </div>
 
-            {/* Sisi Kanan: Form Login */}
-            <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-6 bg-white dark:bg-neutral-950">
+            {/* Sisi Kanan: Formulir Masuk */}
+            <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-6 sm:p-10 bg-white dark:bg-neutral-900">
                 <div className="w-full max-w-sm space-y-6">
-                    {/* Header Brand */}
-                    <div className="text-center">
-                        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">E.S.I.S</h1>
-                        <p className="text-slate-500 dark:text-slate-400 mt-1 text-[13px]">Welcome back!</p>
+                    {/* Header Formulir */}
+                    <div>
+                        <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                            Masuk ke Sistem
+                        </h2>
+                        <p className="text-slate-500 dark:text-slate-400 mt-1 text-xs">
+                            Masukkan akun petugas pengawas atau administrator laboratorium.
+                        </p>
                     </div>
 
-                    {/* Tombol Login Google (Mock) */}
-                    <button className="w-full flex items-center justify-center space-x-2 py-2 border border-slate-300 dark:border-neutral-700 rounded-lg text-[13px] text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-neutral-900 transition-colors">
-                        <svg className="w-4 h-4" viewBox="0 0 24 24">
-                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                        </svg>
-                        <span>Sign in with Google</span>
-                    </button>
-
-                    {/* Divider */}
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-slate-200 dark:border-neutral-700"></div>
+                    {/* Alert Pesan Error */}
+                    {errorMsg && (
+                        <div className="flex items-start space-x-2 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-lg text-rose-600 dark:text-rose-400 text-xs">
+                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                            <span>{errorMsg}</span>
                         </div>
-                        <div className="relative flex justify-center text-[11px]">
-                            <span className="px-2 bg-white dark:bg-neutral-950 text-slate-400">OR LOGIN WITH EMAIL</span>
-                        </div>
-                    </div>
+                    )}
 
                     {/* Form Input */}
-                    <form onSubmit={handleLogin} className="space-y-4">
-                        {/* Input Email */}
+                    <form onSubmit={handleLogin} className="space-y-4 text-xs">
+                        {/* Input Username */}
                         <div className="space-y-1.5">
-                            <label className="text-[13px] font-bold text-slate-700 dark:text-slate-300 block">Email Address</label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-3 py-2 text-[13px] bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-transparent rounded-lg focus:bg-white dark:focus:bg-neutral-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800/50 outline-none transition-all dark:text-white"
-                                placeholder="admin@e.s.i.s.local"
-                                required
-                            />
+                            <label className="font-semibold text-slate-700 dark:text-slate-300 block">
+                                Username Petugas
+                            </label>
+                            <div className="relative">
+                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <User className="w-4 h-4" />
+                                </span>
+                                <input
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-neutral-800 transition-all"
+                                    placeholder="Contoh: superadmin-esis"
+                                    required
+                                    autoFocus
+                                />
+                            </div>
                         </div>
 
                         {/* Input Password */}
                         <div className="space-y-1.5">
-                            <div className="flex justify-between items-center">
-                                <label className="text-[13px] font-bold text-slate-700 dark:text-slate-300 block">Password</label>
-                                <a href="#" className="text-[11px] text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                                    Forget Password?
-                                </a>
+                            <label className="font-semibold text-slate-700 dark:text-slate-300 block">
+                                Kata Sandi
+                            </label>
+                            <div className="relative">
+                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <Lock className="w-4 h-4" />
+                                </span>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full pl-9 pr-10 py-2.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-neutral-800 transition-all"
+                                    placeholder="••••••••••••"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                    aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                                >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
                             </div>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-3 py-2 text-[13px] bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-transparent rounded-lg focus:bg-white dark:focus:bg-neutral-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800/50 outline-none transition-all dark:text-white"
-                                placeholder="••••••••"
-                                required
-                            />
                         </div>
 
-                        {/* Tombol Login */}
+                        {/* Tombol Submit Masuk */}
                         <button
                             type="submit"
-                            className="w-full bg-[#343A40] dark:bg-blue-600 hover:bg-[#212529] dark:hover:bg-blue-700 text-white font-bold py-2.5 text-[13px] rounded-lg transition-colors mt-2"
+                            disabled={isLoading}
+                            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-xs mt-3"
                         >
-                            Login
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <span>Memverifikasi Akun...</span>
+                                </>
+                            ) : (
+                                <span>Masuk ke Dashboard</span>
+                            )}
                         </button>
                     </form>
 
-                    {/* Divider Bawah */}
-                    <div className="relative mt-6">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-slate-200 dark:border-neutral-700"></div>
-                        </div>
-                        <div className="relative flex justify-center text-[11px]">
-                            <span className="px-2 bg-white dark:bg-neutral-950 text-slate-400">OR SIGN UP</span>
-                        </div>
+                    {/* Informasi Tingkat Akses */}
+                    <div className="pt-2 text-center border-t border-slate-100 dark:border-neutral-800 text-[11px] text-slate-400">
+                        Otorisasi: Superadmin, Admin Laboran, Security PLT
                     </div>
                 </div>
             </div>
