@@ -1,3 +1,10 @@
+# dependencies
+node_modules/
+package-lock.json
+package.json
+
 # files or folders that shouldnt push to github
 ./reference
 ./mediamtx
+.env*
+

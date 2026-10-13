@@ -3,12 +3,20 @@ import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import { signSession } from "@/utils/auth";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+export const dynamic = "force-dynamic";
+
+function getSupabaseClient() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    if (!supabaseUrl || !supabaseKey) {
+        throw new Error("Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) are missing.");
+    }
+    return createClient(supabaseUrl, supabaseKey);
+}
 
 export async function POST(request: NextRequest) {
     try {
+        const supabase = getSupabaseClient();
         const body = await request.json();
         const { username, password } = body;
 

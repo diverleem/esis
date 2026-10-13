@@ -3,12 +3,20 @@ import { verifySession } from "@/utils/auth";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+export const dynamic = "force-dynamic";
+
+function getSupabaseClient() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    if (!supabaseUrl || !supabaseKey) {
+        throw new Error("Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) are missing.");
+    }
+    return createClient(supabaseUrl, supabaseKey);
+}
 
 // GET /api/users - Hanya superadmin yang bisa melihat daftar user
 export async function GET(request: NextRequest) {
+    const supabase = getSupabaseClient();
     const token = request.cookies.get("session_token")?.value;
     const session = token ? await verifySession(token) : null;
 
@@ -45,6 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+        const supabase = getSupabaseClient();
         const body = await request.json();
         const { username, password, role, name } = body;
 
