@@ -10,3 +10,6 @@ package.json
 supabase_schema.sql
 playlist_duration.txt
 ./anti-slop
+supabase_schema
+insert_mahasiswa.sql
+seed_mahasiswa_volunteer.sql

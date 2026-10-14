@@ -1,20 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { 
-    Video, 
-    RefreshCw, 
-    Layers, 
-    Maximize2, 
-    Grid2X2, 
-    Grid3X3, 
-    Square, 
-    Filter, 
-    ShieldCheck, 
+import {
+    Video,
+    RefreshCw,
+    Layers,
+    Maximize2,
+    Grid2X2,
+    Grid3X3,
+    Square,
+    Filter,
+    ShieldCheck,
     AlertTriangle,
     Eye,
     Building2,
-    RotateCcw
+    RotateCcw,
 } from "lucide-react";
 
 interface CameraItem {
@@ -28,19 +28,110 @@ interface CameraItem {
 
 export default function CCTVPage() {
     const cameras: CameraItem[] = [
-        { id: 1, name: "Lab Sisdig", zone: "Laboratorium Sistem Digital", floor: "Lt. 5", url: "https://stream.ucim.my.id/cam_lab_sisdig", protocol: "WebRTC" },
-        { id: 2, name: "Lab OS", zone: "Laboratorium Sistem Operasi", floor: "Lt. 5", url: "https://stream.ucim.my.id/cam_lab_os", protocol: "WebRTC" },
-        { id: 3, name: "Lab Programming", zone: "Laboratorium Pemrograman", floor: "Lt. 5", url: "https://stream.ucim.my.id/cam_lab_programming", protocol: "WebRTC" },
-        { id: 4, name: "Lab Riset Lt 5", zone: "Laboratorium Riset & Robotika", floor: "Lt. 5", url: "https://stream.ucim.my.id/cam_lab_riset_lt5", protocol: "WebRTC" },
-        { id: 5, name: "Lab ELC", zone: "Laboratorium Elektronika", floor: "Lt. 5", url: "https://stream.ucim.my.id/cam_lab_elc", protocol: "WebRTC" },
-        { id: 6, name: "Lab Jaringan", zone: "Laboratorium Jaringan Komputer", floor: "Lt. 6", url: "https://stream.ucim.my.id/cam_lab_jaringan", protocol: "WebRTC" },
-        { id: 7, name: "Lab Multimedia 1", zone: "Laboratorium Multimedia & Desain 1", floor: "Lt. 6", url: "https://stream.ucim.my.id/cam_lab_multimedia1", protocol: "WebRTC" },
-        { id: 8, name: "Lab Multimedia 2", zone: "Laboratorium Multimedia & Desain 2", floor: "Lt. 6", url: "https://stream.ucim.my.id/cam_lab_multimedia2", protocol: "WebRTC" },
-        { id: 9, name: "Lab APL 1", zone: "Laboratorium Algoritma & Pemrograman 1", floor: "Lt. 6", url: "https://stream.ucim.my.id/cam_lab_apl1", protocol: "WebRTC" },
-        { id: 10, name: "Lab APL 2", zone: "Laboratorium Algoritma & Pemrograman 2", floor: "Lt. 6", url: "https://stream.ucim.my.id/cam_lab_apl2", protocol: "WebRTC" },
-        { id: 11, name: "Lab Riset Lt 6", zone: "Laboratorium Riset Lanjut", floor: "Lt. 6", url: "https://stream.ucim.my.id/cam_lab_riset_lt6", protocol: "WebRTC" },
-        { id: 12, name: "Lab Tambang", zone: "Laboratorium Komputasi Tambang", floor: "Lt. 6", url: "https://stream.ucim.my.id/cam_lab_tambang", protocol: "WebRTC" },
-        { id: 13, name: "Lab Matematika", zone: "Laboratorium Komputasi Matematika", floor: "Lt. 6", url: "https://stream.ucim.my.id/cam_lab_mtk", protocol: "WebRTC" },
+        {
+            id: 1,
+            name: "Lab Sisdig",
+            zone: "Laboratorium Sistem Digital",
+            floor: "Lt. 5",
+            url: "https://stream.ucim.my.id/cam_lab_sisdig",
+            protocol: "WebRTC",
+        },
+        {
+            id: 2,
+            name: "Lab OS",
+            zone: "Laboratorium Sistem Operasi",
+            floor: "Lt. 5",
+            url: "https://stream.ucim.my.id/cam_lab_os",
+            protocol: "WebRTC",
+        },
+        {
+            id: 3,
+            name: "Lab Programming",
+            zone: "Laboratorium Pemrograman",
+            floor: "Lt. 5",
+            url: "https://stream.ucim.my.id/cam_lab_programming",
+            protocol: "WebRTC",
+        },
+        {
+            id: 4,
+            name: "Lab Riset Lt 5",
+            zone: "Laboratorium Riset & Robotika",
+            floor: "Lt. 5",
+            url: "https://stream.ucim.my.id/cam_lab_riset_lt5",
+            protocol: "WebRTC",
+        },
+        {
+            id: 5,
+            name: "Lab ELC",
+            zone: "Laboratorium Elektronika",
+            floor: "Lt. 5",
+            url: "https://stream.ucim.my.id/cam_lab_elc",
+            protocol: "WebRTC",
+        },
+        {
+            id: 6,
+            name: "Lab Jaringan",
+            zone: "Laboratorium Jaringan Komputer",
+            floor: "Lt. 6",
+            url: "https://stream.ucim.my.id/cam_lab_jaringan",
+            protocol: "WebRTC",
+        },
+        {
+            id: 7,
+            name: "Lab Multimedia 1",
+            zone: "Laboratorium Multimedia & Desain 1",
+            floor: "Lt. 6",
+            url: "https://stream.ucim.my.id/cam_lab_multimedia1",
+            protocol: "WebRTC",
+        },
+        {
+            id: 8,
+            name: "Lab Multimedia 2",
+            zone: "Laboratorium Multimedia & Desain 2",
+            floor: "Lt. 6",
+            url: "https://stream.ucim.my.id/cam_lab_multimedia2",
+            protocol: "WebRTC",
+        },
+        {
+            id: 9,
+            name: "Lab APL 1",
+            zone: "Laboratorium Algoritma & Pemrograman 1",
+            floor: "Lt. 6",
+            url: "https://stream.ucim.my.id/cam_lab_apl1",
+            protocol: "WebRTC",
+        },
+        {
+            id: 10,
+            name: "Lab APL 2",
+            zone: "Laboratorium Algoritma & Pemrograman 2",
+            floor: "Lt. 6",
+            url: "https://stream.ucim.my.id/cam_lab_apl2",
+            protocol: "WebRTC",
+        },
+        {
+            id: 11,
+            name: "Lab Riset Lt 6",
+            zone: "Laboratorium Riset Lanjut",
+            floor: "Lt. 6",
+            url: "https://stream.ucim.my.id/cam_lab_riset_lt6",
+            protocol: "WebRTC",
+        },
+        {
+            id: 12,
+            name: "Lab Tambang",
+            zone: "Laboratorium Komputasi Tambang",
+            floor: "Lt. 6",
+            url: "https://stream.ucim.my.id/cam_lab_tambang",
+            protocol: "WebRTC",
+        },
+        {
+            id: 13,
+            name: "Lab Matematika",
+            zone: "Laboratorium Komputasi Matematika",
+            floor: "Lt. 6",
+            url: "https://stream.ucim.my.id/cam_lab_mtk",
+            protocol: "WebRTC",
+        },
     ];
 
     const [viewMode, setViewMode] = useState<"grid" | "single">("grid");
@@ -219,9 +310,7 @@ export default function CCTVPage() {
                             <div className="flex items-center space-x-2 truncate">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
                                 <div className="truncate">
-                                    <h3 className="font-bold text-white text-xs truncate leading-tight">
-                                        {cam.name}
-                                    </h3>
+                                    <h3 className="font-bold text-white text-xs truncate leading-tight">{cam.name}</h3>
                                     <span className="text-[10px] text-slate-400 font-mono">
                                         {cam.zone} ({cam.floor})
                                     </span>
@@ -241,7 +330,7 @@ export default function CCTVPage() {
                         {/* Player Container */}
                         <div className="w-full aspect-video bg-black relative flex items-center justify-center">
                             <iframe
-                                src={isHDMode ? cam.url : cam.url.replace("stream.ucim.my.id/cam_", "stream.ucim.my.id/Ecam_")}
+                                src={isHDMode ? cam.url : cam.url.replace("stream.ucim.my.id/cam_", "stream.ucim.my.id/ecam_")}
                                 className="w-full h-full border-none"
                                 allowFullScreen
                                 title={`Feed CCTV ${cam.name}`}
@@ -251,9 +340,7 @@ export default function CCTVPage() {
                         {/* Footer Status & Informasi Saluran */}
                         <div className="px-3 py-2 bg-neutral-900 border-t border-neutral-800 flex items-center justify-between text-[11px] font-mono text-slate-400">
                             <div className="flex items-center space-x-2">
-                                <span className="font-semibold text-slate-300">
-                                    CH_{cam.id.toString().padStart(2, "0")}
-                                </span>
+                                <span className="font-semibold text-slate-300">CH_{cam.id.toString().padStart(2, "0")}</span>
                                 <span>•</span>
                                 <span className="text-[10px] text-emerald-400 font-semibold">WebRTC Active</span>
                             </div>

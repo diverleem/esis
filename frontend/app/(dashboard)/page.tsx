@@ -2,33 +2,23 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { 
-    Video, 
-    ShieldAlert, 
-    Clock, 
-    FileCheck, 
-    ExternalLink, 
-    Play, 
-    Pause, 
-    CheckCircle2, 
-    AlertCircle, 
-    Maximize2, 
-    Eye, 
+import {
+    Video,
+    ShieldAlert,
+    Clock,
+    FileCheck,
+    ExternalLink,
+    Play,
+    Pause,
+    CheckCircle2,
+    AlertCircle,
+    Maximize2,
+    Eye,
     Building2,
     Calendar,
-    Filter
+    Filter,
 } from "lucide-react";
-import { 
-    AreaChart, 
-    Area, 
-    BarChart, 
-    Bar, 
-    XAxis, 
-    YAxis, 
-    CartesianGrid, 
-    Tooltip, 
-    ResponsiveContainer 
-} from "recharts";
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useTheme } from "next-themes";
 
 // Data tren deteksi mingguan di Pusat Laboratorium Terpadu (PLT)
@@ -49,10 +39,10 @@ const zoneDistribution = [
 
 // 4 Kamera prioritas untuk quick-view di dashboard
 const quickCameras = [
-    { id: 1, name: "Lab Sisdig", zone: "Lantai 5", url: "https://stream.ucim.my.id/Ecam_lab_sisdig" },
-    { id: 3, name: "Lab Programming", zone: "Lantai 5", url: "https://stream.ucim.my.id/Ecam_lab_programming" },
-    { id: 6, name: "Lab Jaringan", zone: "Lantai 6", url: "https://stream.ucim.my.id/Ecam_lab_jaringan" },
-    { id: 7, name: "Lab Multimedia 1", zone: "Lantai 6", url: "https://stream.ucim.my.id/Ecam_lab_multimedia1" },
+    { id: 1, name: "Lab Sisdig", zone: "Lantai 5", url: "https://stream.ucim.my.id/ecam_lab_sisdig" },
+    { id: 3, name: "Lab Programming", zone: "Lantai 5", url: "https://stream.ucim.my.id/ecam_lab_programming" },
+    { id: 6, name: "Lab Jaringan", zone: "Lantai 6", url: "https://stream.ucim.my.id/ecam_lab_jaringan" },
+    { id: 7, name: "Lab Multimedia 1", zone: "Lantai 6", url: "https://stream.ucim.my.id/ecam_lab_multimedia1" },
 ];
 
 // Data riwayat pelanggaran terkini untuk tabel pemantauan
@@ -65,7 +55,7 @@ const initialRecentIncidents = [
         confidence: "94.2%",
         status: "Menunggu Verifikasi",
         statusType: "pending",
-        pelaku: "Mahasiswa (Perlu Konfirmasi)"
+        pelaku: "Mahasiswa (Perlu Konfirmasi)",
     },
     {
         id: "PLG-202610-002",
@@ -75,7 +65,7 @@ const initialRecentIncidents = [
         confidence: "91.8%",
         status: "Terverifikasi (SP-1)",
         statusType: "verified",
-        pelaku: "Mhs 2021-081023 (Fulan A.)"
+        pelaku: "Mhs 2021-081023 (Fulan A.)",
     },
     {
         id: "PLG-202610-003",
@@ -85,7 +75,7 @@ const initialRecentIncidents = [
         confidence: "88.5%",
         status: "Terverifikasi (Peringatan Lisan)",
         statusType: "verified",
-        pelaku: "Tamu / Eksternal Lab"
+        pelaku: "Tamu / Eksternal Lab",
     },
     {
         id: "PLG-202610-004",
@@ -95,7 +85,7 @@ const initialRecentIncidents = [
         confidence: "64.1%",
         status: "Ditolak (False Positive)",
         statusType: "rejected",
-        pelaku: "Bukan Aktivitas Merokok (Vape/Pena)"
+        pelaku: "Bukan Aktivitas Merokok (Vape/Pena)",
     },
 ];
 
@@ -111,22 +101,24 @@ export default function DashboardPage() {
 
     const isDark = mounted && theme === "dark";
 
-    const filteredIncidents = incidents.filter(item => {
+    const filteredIncidents = incidents.filter((item) => {
         if (filterStatus === "all") return true;
         return item.statusType === filterStatus;
     });
 
     const handleVerify = (id: string) => {
-        setIncidents(prev => prev.map(item => {
-            if (item.id === id) {
-                return {
-                    ...item,
-                    status: "Terverifikasi (SP-1)",
-                    statusType: "verified"
-                };
-            }
-            return item;
-        }));
+        setIncidents((prev) =>
+            prev.map((item) => {
+                if (item.id === id) {
+                    return {
+                        ...item,
+                        status: "Terverifikasi (SP-1)",
+                        statusType: "verified",
+                    };
+                }
+                return item;
+            }),
+        );
     };
 
     return (
@@ -148,7 +140,8 @@ export default function DashboardPage() {
                             Status Operasional Pemantauan & Disiplin Lab
                         </h2>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                            Streaming kamera RTSP/WebRTC terpusat via MediaMTX & deteksi aktivitas merokok berbasis Computer Vision.
+                            Streaming kamera RTSP/WebRTC terpusat via MediaMTX & deteksi aktivitas merokok berbasis Computer
+                            Vision.
                         </p>
                     </div>
 
@@ -212,9 +205,7 @@ export default function DashboardPage() {
                         <div>
                             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Menunggu Verifikasi</p>
                             <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">1 Laporan</h3>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                                Perlu tinjauan rekaman laboran
-                            </p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Perlu tinjauan rekaman laboran</p>
                         </div>
                         <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                             <Clock className="w-5 h-5" />
@@ -228,9 +219,7 @@ export default function DashboardPage() {
                         <div>
                             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Surat Peringatan (SP)</p>
                             <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">2 Diterbitkan</h3>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                                Penegakan Tata Tertib Lab
-                            </p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Penegakan Tata Tertib Lab</p>
                         </div>
                         <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                             <FileCheck className="w-5 h-5" />
@@ -259,7 +248,7 @@ export default function DashboardPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
                     {quickCameras.map((cam) => (
-                        <div 
+                        <div
                             key={cam.id}
                             className="bg-neutral-950 rounded-lg border border-slate-200 dark:border-neutral-800 overflow-hidden relative group"
                         >
@@ -326,17 +315,17 @@ export default function DashboardPage() {
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={weeklyIncidentData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#262626" : "#f1f5f9"} />
-                                <XAxis 
-                                    dataKey="day" 
-                                    tick={{ fill: isDark ? "#94a3b8" : "#64748b", fontSize: 11 }} 
-                                    axisLine={false} 
-                                    tickLine={false} 
+                                <XAxis
+                                    dataKey="day"
+                                    tick={{ fill: isDark ? "#94a3b8" : "#64748b", fontSize: 11 }}
+                                    axisLine={false}
+                                    tickLine={false}
                                 />
-                                <YAxis 
+                                <YAxis
                                     allowDecimals={false}
-                                    tick={{ fill: isDark ? "#94a3b8" : "#64748b", fontSize: 11 }} 
-                                    axisLine={false} 
-                                    tickLine={false} 
+                                    tick={{ fill: isDark ? "#94a3b8" : "#64748b", fontSize: 11 }}
+                                    axisLine={false}
+                                    tickLine={false}
                                 />
                                 <Tooltip
                                     contentStyle={{
@@ -356,22 +345,27 @@ export default function DashboardPage() {
                 {/* Cakupan Zona Laboratorium PLT (1 Kolom) */}
                 <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-5 shadow-2xs flex flex-col justify-between">
                     <div>
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
-                            Cakupan Wilayah Laboratorium
-                        </h3>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Cakupan Wilayah Laboratorium</h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
                             Distribusi kamera aktif di Gedung Pusat Lab Terpadu
                         </p>
 
                         <div className="space-y-4">
                             {zoneDistribution.map((item, idx) => (
-                                <div key={idx} className="p-3 rounded-lg bg-slate-50 dark:bg-neutral-800/60 border border-slate-200/60 dark:border-neutral-700/60">
+                                <div
+                                    key={idx}
+                                    className="p-3 rounded-lg bg-slate-50 dark:bg-neutral-800/60 border border-slate-200/60 dark:border-neutral-700/60"
+                                >
                                     <div className="flex justify-between items-center mb-1.5">
-                                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{item.zone}</span>
-                                        <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{item.count} Kamera</span>
+                                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                            {item.zone}
+                                        </span>
+                                        <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                                            {item.count} Kamera
+                                        </span>
                                     </div>
                                     <div className="w-full bg-slate-200 dark:bg-neutral-700 h-2 rounded-full overflow-hidden">
-                                        <div 
+                                        <div
                                             className="bg-blue-600 h-full rounded-full transition-all"
                                             style={{ width: item.percentage }}
                                         />
@@ -384,7 +378,8 @@ export default function DashboardPage() {
                     <div className="mt-5 p-3 rounded-lg border border-blue-100 dark:border-blue-950 bg-blue-50/50 dark:bg-blue-950/20 text-xs text-slate-600 dark:text-slate-300">
                         <p className="font-semibold text-blue-900 dark:text-blue-300 mb-0.5">Tata Tertib KTR Kampus</p>
                         <p className="text-[11px] leading-relaxed">
-                            Berdasarkan SK Rektor, seluruh ruang laboratorium komputer PLT merupakan zona terlarang untuk rokok konvensional maupun rokok elektronik.
+                            Berdasarkan SK Rektor, seluruh ruang laboratorium komputer PLT merupakan zona terlarang untuk rokok
+                            konvensional maupun rokok elektronik.
                         </p>
                     </div>
                 </div>
@@ -394,9 +389,7 @@ export default function DashboardPage() {
             <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-5 shadow-2xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
                     <div>
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                            Log Kejadian Deteksi Terbaru
-                        </h3>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Log Kejadian Deteksi Terbaru</h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                             Daftar aktivitas mencurigakan yang terekam oleh kamera pengawas
                         </p>
@@ -447,9 +440,7 @@ export default function DashboardPage() {
                         <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                             Tidak ada insiden dengan filter ini
                         </p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                            Semua kondisi laboratorium terpantau tertib dan aman.
-                        </p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Semua kondisi laboratorium terpantau tertib dan aman.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
@@ -471,9 +462,7 @@ export default function DashboardPage() {
                                         <td className="py-3 pl-1 font-mono font-semibold text-slate-800 dark:text-slate-200">
                                             {row.id}
                                         </td>
-                                        <td className="py-3 text-slate-600 dark:text-slate-300">
-                                            {row.time}
-                                        </td>
+                                        <td className="py-3 text-slate-600 dark:text-slate-300">{row.time}</td>
                                         <td className="py-3">
                                             <p className="font-medium text-slate-800 dark:text-slate-200">{row.location}</p>
                                             <span className="text-[10px] text-slate-400 font-mono">{row.camera}</span>
@@ -484,19 +473,19 @@ export default function DashboardPage() {
                                             </span>
                                         </td>
                                         <td className="py-3">
-                                            <span className={`inline-flex items-center space-x-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                                                row.statusType === "pending"
-                                                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                                                    : row.statusType === "verified"
-                                                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                                                    : "bg-slate-200 text-slate-700 dark:bg-neutral-800 dark:text-slate-400"
-                                            }`}>
+                                            <span
+                                                className={`inline-flex items-center space-x-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                                                    row.statusType === "pending"
+                                                        ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                                                        : row.statusType === "verified"
+                                                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                                          : "bg-slate-200 text-slate-700 dark:bg-neutral-800 dark:text-slate-400"
+                                                }`}
+                                            >
                                                 {row.status}
                                             </span>
                                         </td>
-                                        <td className="py-3 text-slate-600 dark:text-slate-300">
-                                            {row.pelaku}
-                                        </td>
+                                        <td className="py-3 text-slate-600 dark:text-slate-300">{row.pelaku}</td>
                                         <td className="py-3 text-right pr-1">
                                             {row.statusType === "pending" ? (
                                                 <button
