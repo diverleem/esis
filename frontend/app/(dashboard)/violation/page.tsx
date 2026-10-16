@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
     ShieldAlert, 
     Search, 
@@ -103,10 +103,25 @@ const initialViolations: ViolationRecord[] = [
 
 export default function ViolationPage() {
     const [records, setRecords] = useState<ViolationRecord[]>(initialViolations);
+    const [currentUser, setCurrentUser] = useState<{ id: string; username: string; role: string; name?: string } | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedStatus, setSelectedStatus] = useState<string>("all");
     const [selectedRecord, setSelectedRecord] = useState<ViolationRecord | null>(null);
     const [modalAction, setModalAction] = useState<"sp1" | "sp2" | "reject" | null>(null);
+
+    useEffect(() => {
+        fetch("/api/auth/me")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (data?.authenticated && data?.user) {
+                    setCurrentUser(data.user);
+                }
+            })
+            .catch(() => {});
+    }, []);
+
+    // Hanya role admin yang bertugas dan berwenang approve catatan pelanggaran
+    const canApprove = currentUser?.role === "admin";
 
     const filteredRecords = records.filter((item) => {
         const matchesSearch = 
@@ -390,29 +405,51 @@ export default function ViolationPage() {
                             </div>
                         </div>
 
-                        {/* Tombol Aksi Verifikasi Laboran */}
-                        <div className="mt-5 pt-3 border-t border-slate-100 dark:border-neutral-800 flex flex-wrap gap-2 justify-end">
-                            <button
-                                type="button"
-                                onClick={() => handleVerifyAction(selectedRecord, "reject")}
-                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
-                            >
-                                Tolak (False Positive)
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => handleVerifyAction(selectedRecord, "sp1")}
-                                className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold rounded-lg transition-colors shadow-2xs"
-                            >
-                                Terbitkan SP-1
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => handleVerifyAction(selectedRecord, "sp2")}
-                                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-2xs"
-                            >
-                                Terbitkan SP-2
-                            </button>
+                        {/* Tombol Aksi Verifikasi: Khusus Role Admin */}
+                        <div className="mt-5 pt-3 border-t border-slate-100 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-2">
+                            {canApprove ? (
+                                <>
+                                    <span className="text-[11px] text-slate-400">
+                                        Wewenang: Admin Laboran
+                                    </span>
+                                    <div className="flex flex-wrap gap-2 justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleVerifyAction(selectedRecord, "reject")}
+                                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
+                                        >
+                                            Tolak (Bukan Merokok)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleVerifyAction(selectedRecord, "sp1")}
+                                            className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold rounded-lg transition-colors shadow-2xs"
+                                        >
+                                            Terbitkan SP-1
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleVerifyAction(selectedRecord, "sp2")}
+                                            className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-2xs"
+                                        >
+                                            Terbitkan SP-2
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="text-[11px] text-slate-400 italic">
+                                        Persetujuan dan penerbitan SP merupakan wewenang Admin.
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedRecord(null)}
+                                        className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
+                                    >
+                                        Tutup
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

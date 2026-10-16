@@ -17,120 +17,150 @@ var _s = __turbopack_context__.k.signature();
 "use client";
 ;
 ;
+const DEFAULT_CAMERAS = [
+    {
+        id: 1,
+        name: "Lab Sisdig",
+        zone: "Laboratorium Sistem Digital",
+        floor: "Lt. 5",
+        url: "https://stream.ucim.my.id/cam_lab_sisdig",
+        protocol: "WebRTC"
+    },
+    {
+        id: 2,
+        name: "Lab OS",
+        zone: "Laboratorium Sistem Operasi",
+        floor: "Lt. 5",
+        url: "https://stream.ucim.my.id/cam_lab_os",
+        protocol: "WebRTC"
+    },
+    {
+        id: 3,
+        name: "Lab Programming",
+        zone: "Laboratorium Pemrograman",
+        floor: "Lt. 5",
+        url: "https://stream.ucim.my.id/cam_lab_programming",
+        protocol: "WebRTC"
+    },
+    {
+        id: 4,
+        name: "Lab Riset Lt 5",
+        zone: "Laboratorium Riset & Robotika",
+        floor: "Lt. 5",
+        url: "https://stream.ucim.my.id/cam_lab_riset_lt5",
+        protocol: "WebRTC"
+    },
+    {
+        id: 5,
+        name: "Lab ELC",
+        zone: "Laboratorium Elektronika",
+        floor: "Lt. 5",
+        url: "https://stream.ucim.my.id/cam_lab_elc",
+        protocol: "WebRTC"
+    },
+    {
+        id: 6,
+        name: "Lab Jaringan",
+        zone: "Laboratorium Jaringan Komputer",
+        floor: "Lt. 6",
+        url: "https://stream.ucim.my.id/cam_lab_jaringan",
+        protocol: "WebRTC"
+    },
+    {
+        id: 7,
+        name: "Lab Multimedia 1",
+        zone: "Laboratorium Multimedia & Desain 1",
+        floor: "Lt. 6",
+        url: "https://stream.ucim.my.id/cam_lab_multimedia1",
+        protocol: "WebRTC"
+    },
+    {
+        id: 8,
+        name: "Lab Multimedia 2",
+        zone: "Laboratorium Multimedia & Desain 2",
+        floor: "Lt. 6",
+        url: "https://stream.ucim.my.id/cam_lab_multimedia2",
+        protocol: "WebRTC"
+    },
+    {
+        id: 9,
+        name: "Lab APL 1",
+        zone: "Laboratorium Algoritma & Pemrograman 1",
+        floor: "Lt. 6",
+        url: "https://stream.ucim.my.id/cam_lab_apl1",
+        protocol: "WebRTC"
+    },
+    {
+        id: 10,
+        name: "Lab APL 2",
+        zone: "Laboratorium Algoritma & Pemrograman 2",
+        floor: "Lt. 6",
+        url: "https://stream.ucim.my.id/cam_lab_apl2",
+        protocol: "WebRTC"
+    },
+    {
+        id: 11,
+        name: "Lab Riset Lt 6",
+        zone: "Laboratorium Riset Lanjut",
+        floor: "Lt. 6",
+        url: "https://stream.ucim.my.id/cam_lab_riset_lt6",
+        protocol: "WebRTC"
+    },
+    {
+        id: 12,
+        name: "Lab Tambang",
+        zone: "Laboratorium Komputasi Tambang",
+        floor: "Lt. 6",
+        url: "https://stream.ucim.my.id/cam_lab_tambang",
+        protocol: "WebRTC"
+    },
+    {
+        id: 13,
+        name: "Lab Matematika",
+        zone: "Laboratorium Komputasi Matematika",
+        floor: "Lt. 6",
+        url: "https://stream.ucim.my.id/cam_lab_mtk",
+        protocol: "WebRTC"
+    }
+];
 function CCTVPage() {
     _s();
-    const cameras = [
-        {
-            id: 1,
-            name: "Lab Sisdig",
-            zone: "Laboratorium Sistem Digital",
-            floor: "Lt. 5",
-            url: "https://stream.ucim.my.id/cam_lab_sisdig",
-            protocol: "WebRTC"
-        },
-        {
-            id: 2,
-            name: "Lab OS",
-            zone: "Laboratorium Sistem Operasi",
-            floor: "Lt. 5",
-            url: "https://stream.ucim.my.id/cam_lab_os",
-            protocol: "WebRTC"
-        },
-        {
-            id: 3,
-            name: "Lab Programming",
-            zone: "Laboratorium Pemrograman",
-            floor: "Lt. 5",
-            url: "https://stream.ucim.my.id/cam_lab_programming",
-            protocol: "WebRTC"
-        },
-        {
-            id: 4,
-            name: "Lab Riset Lt 5",
-            zone: "Laboratorium Riset & Robotika",
-            floor: "Lt. 5",
-            url: "https://stream.ucim.my.id/cam_lab_riset_lt5",
-            protocol: "WebRTC"
-        },
-        {
-            id: 5,
-            name: "Lab ELC",
-            zone: "Laboratorium Elektronika",
-            floor: "Lt. 5",
-            url: "https://stream.ucim.my.id/cam_lab_elc",
-            protocol: "WebRTC"
-        },
-        {
-            id: 6,
-            name: "Lab Jaringan",
-            zone: "Laboratorium Jaringan Komputer",
-            floor: "Lt. 6",
-            url: "https://stream.ucim.my.id/cam_lab_jaringan",
-            protocol: "WebRTC"
-        },
-        {
-            id: 7,
-            name: "Lab Multimedia 1",
-            zone: "Laboratorium Multimedia & Desain 1",
-            floor: "Lt. 6",
-            url: "https://stream.ucim.my.id/cam_lab_multimedia1",
-            protocol: "WebRTC"
-        },
-        {
-            id: 8,
-            name: "Lab Multimedia 2",
-            zone: "Laboratorium Multimedia & Desain 2",
-            floor: "Lt. 6",
-            url: "https://stream.ucim.my.id/cam_lab_multimedia2",
-            protocol: "WebRTC"
-        },
-        {
-            id: 9,
-            name: "Lab APL 1",
-            zone: "Laboratorium Algoritma & Pemrograman 1",
-            floor: "Lt. 6",
-            url: "https://stream.ucim.my.id/cam_lab_apl1",
-            protocol: "WebRTC"
-        },
-        {
-            id: 10,
-            name: "Lab APL 2",
-            zone: "Laboratorium Algoritma & Pemrograman 2",
-            floor: "Lt. 6",
-            url: "https://stream.ucim.my.id/cam_lab_apl2",
-            protocol: "WebRTC"
-        },
-        {
-            id: 11,
-            name: "Lab Riset Lt 6",
-            zone: "Laboratorium Riset Lanjut",
-            floor: "Lt. 6",
-            url: "https://stream.ucim.my.id/cam_lab_riset_lt6",
-            protocol: "WebRTC"
-        },
-        {
-            id: 12,
-            name: "Lab Tambang",
-            zone: "Laboratorium Komputasi Tambang",
-            floor: "Lt. 6",
-            url: "https://stream.ucim.my.id/cam_lab_tambang",
-            protocol: "WebRTC"
-        },
-        {
-            id: 13,
-            name: "Lab Matematika",
-            zone: "Laboratorium Komputasi Matematika",
-            floor: "Lt. 6",
-            url: "https://stream.ucim.my.id/cam_lab_mtk",
-            protocol: "WebRTC"
-        }
-    ];
+    const [cameras, setCameras] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(DEFAULT_CAMERAS);
     const [viewMode, setViewMode] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("grid");
     const [selectedCamId, setSelectedCamId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(1);
     const [selectedFloor, setSelectedFloor] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("all");
     const [isHDMode, setIsHDMode] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [streamReloadKey, setStreamReloadKey] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(0);
     const [expandedCamera, setExpandedCamera] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    // Ambil data kamera streaming dinamis dari basis data Supabase / MediaMTX
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "CCTVPage.useEffect": ()=>{
+            fetch("/api/streaming").then({
+                "CCTVPage.useEffect": (res)=>res.ok ? res.json() : null
+            }["CCTVPage.useEffect"]).then({
+                "CCTVPage.useEffect": (data)=>{
+                    if (data?.success && Array.isArray(data.streams) && data.streams.length > 0) {
+                        const mapped = data.streams.map({
+                            "CCTVPage.useEffect.mapped": (s)=>({
+                                    id: s.id,
+                                    name: s.label || s.name,
+                                    zone: s.zone || `Area ${s.label || s.name}`,
+                                    floor: s.floor || "Lt. 5",
+                                    url: `https://stream.ucim.my.id/${s.name}`,
+                                    protocol: s.protocol || "WebRTC"
+                                })
+                        }["CCTVPage.useEffect.mapped"]);
+                        setCameras(mapped);
+                        if (mapped[0]) {
+                            setSelectedCamId(mapped[0].id);
+                        }
+                    }
+                }
+            }["CCTVPage.useEffect"]).catch({
+                "CCTVPage.useEffect": ()=>{}
+            }["CCTVPage.useEffect"]);
+        }
+    }["CCTVPage.useEffect"], []);
     const filteredCameras = cameras.filter((cam)=>{
         if (selectedFloor === "all") return true;
         return cam.floor === selectedFloor;
@@ -156,21 +186,21 @@ function CCTVPage() {
                                             className: "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"
                                         }, void 0, false, {
                                             fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                            lineNumber: 163,
+                                            lineNumber: 195,
                                             columnNumber: 29
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             className: "text-xs font-bold text-slate-500 dark:text-slate-400",
-                                            children: "MediaMTX Streaming Server — Live Feeds"
+                                            children: "MediaMTX Streaming Server: Live Feeds"
                                         }, void 0, false, {
                                             fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                            lineNumber: 164,
+                                            lineNumber: 196,
                                             columnNumber: 29
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                    lineNumber: 162,
+                                    lineNumber: 194,
                                     columnNumber: 25
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -178,7 +208,7 @@ function CCTVPage() {
                                     children: "Matriks Pemantauan CCTV Laboratorium"
                                 }, void 0, false, {
                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                    lineNumber: 168,
+                                    lineNumber: 200,
                                     columnNumber: 25
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -186,13 +216,13 @@ function CCTVPage() {
                                     children: "Menampilkan feed video kamera pengawas di Gedung Pusat Laboratorium Terpadu (PLT)."
                                 }, void 0, false, {
                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                    lineNumber: 171,
+                                    lineNumber: 203,
                                     columnNumber: 25
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                            lineNumber: 161,
+                            lineNumber: 193,
                             columnNumber: 21
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -212,7 +242,7 @@ function CCTVPage() {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                            lineNumber: 180,
+                                            lineNumber: 212,
                                             columnNumber: 29
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -222,7 +252,7 @@ function CCTVPage() {
                                             children: "Lantai 5"
                                         }, void 0, false, {
                                             fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                            lineNumber: 191,
+                                            lineNumber: 223,
                                             columnNumber: 29
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -232,13 +262,13 @@ function CCTVPage() {
                                             children: "Lantai 6"
                                         }, void 0, false, {
                                             fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                            lineNumber: 202,
+                                            lineNumber: 234,
                                             columnNumber: 29
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                    lineNumber: 179,
+                                    lineNumber: 211,
                                     columnNumber: 25
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -254,20 +284,20 @@ function CCTVPage() {
                                                     className: "w-3.5 h-3.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                    lineNumber: 227,
+                                                    lineNumber: 259,
                                                     columnNumber: 33
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     children: "Matriks"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                    lineNumber: 228,
+                                                    lineNumber: 260,
                                                     columnNumber: 33
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                            lineNumber: 217,
+                                            lineNumber: 249,
                                             columnNumber: 29
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -280,26 +310,26 @@ function CCTVPage() {
                                                     className: "w-3.5 h-3.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                    lineNumber: 240,
+                                                    lineNumber: 272,
                                                     columnNumber: 33
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     children: "Tunggal"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                    lineNumber: 241,
+                                                    lineNumber: 273,
                                                     columnNumber: 33
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                            lineNumber: 230,
+                                            lineNumber: 262,
                                             columnNumber: 29
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                    lineNumber: 216,
+                                    lineNumber: 248,
                                     columnNumber: 25
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -312,7 +342,7 @@ function CCTVPage() {
                                             className: "rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
                                         }, void 0, false, {
                                             fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                            lineNumber: 247,
+                                            lineNumber: 279,
                                             columnNumber: 29
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -320,13 +350,13 @@ function CCTVPage() {
                                             children: "Mode HD"
                                         }, void 0, false, {
                                             fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                            lineNumber: 253,
+                                            lineNumber: 285,
                                             columnNumber: 29
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                    lineNumber: 246,
+                                    lineNumber: 278,
                                     columnNumber: 25
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -339,29 +369,29 @@ function CCTVPage() {
                                         className: "w-4 h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                        lineNumber: 264,
+                                        lineNumber: 296,
                                         columnNumber: 29
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                    lineNumber: 257,
+                                    lineNumber: 289,
                                     columnNumber: 25
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                            lineNumber: 177,
+                            lineNumber: 209,
                             columnNumber: 21
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                    lineNumber: 159,
+                    lineNumber: 191,
                     columnNumber: 17
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                lineNumber: 158,
+                lineNumber: 190,
                 columnNumber: 13
             }, this),
             viewMode === "single" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -372,7 +402,7 @@ function CCTVPage() {
                         children: "Pilih Kamera untuk Ditampilkan:"
                     }, void 0, false, {
                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                        lineNumber: 273,
+                        lineNumber: 305,
                         columnNumber: 21
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -389,18 +419,18 @@ function CCTVPage() {
                                 ]
                             }, cam.id, true, {
                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                lineNumber: 278,
+                                lineNumber: 310,
                                 columnNumber: 29
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                        lineNumber: 276,
+                        lineNumber: 308,
                         columnNumber: 21
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                lineNumber: 272,
+                lineNumber: 304,
                 columnNumber: 17
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -420,7 +450,7 @@ function CCTVPage() {
                                                 className: "w-2 h-2 rounded-full bg-emerald-500 shrink-0"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                lineNumber: 311,
+                                                lineNumber: 343,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -431,7 +461,7 @@ function CCTVPage() {
                                                         children: cam.name
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                        lineNumber: 313,
+                                                        lineNumber: 345,
                                                         columnNumber: 37
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -444,19 +474,19 @@ function CCTVPage() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                        lineNumber: 314,
+                                                        lineNumber: 346,
                                                         columnNumber: 37
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                lineNumber: 312,
+                                                lineNumber: 344,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                        lineNumber: 310,
+                                        lineNumber: 342,
                                         columnNumber: 29
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -467,7 +497,7 @@ function CCTVPage() {
                                                 children: "LIVE"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                lineNumber: 321,
+                                                lineNumber: 353,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -475,19 +505,19 @@ function CCTVPage() {
                                                 children: isHDMode ? "1080p" : "720p"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                lineNumber: 324,
+                                                lineNumber: 356,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                        lineNumber: 320,
+                                        lineNumber: 352,
                                         columnNumber: 29
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                lineNumber: 309,
+                                lineNumber: 341,
                                 columnNumber: 25
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -499,12 +529,12 @@ function CCTVPage() {
                                     title: `Feed CCTV ${cam.name}`
                                 }, void 0, false, {
                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                    lineNumber: 332,
+                                    lineNumber: 364,
                                     columnNumber: 29
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                lineNumber: 331,
+                                lineNumber: 363,
                                 columnNumber: 25
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -521,14 +551,14 @@ function CCTVPage() {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                lineNumber: 343,
+                                                lineNumber: 375,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "•"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                lineNumber: 344,
+                                                lineNumber: 376,
                                                 columnNumber: 33
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -536,13 +566,13 @@ function CCTVPage() {
                                                 children: "WebRTC Active"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                                lineNumber: 345,
+                                                lineNumber: 377,
                                                 columnNumber: 33
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                        lineNumber: 342,
+                                        lineNumber: 374,
                                         columnNumber: 29
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -552,29 +582,29 @@ function CCTVPage() {
                                             children: "Tunnel Pinggy"
                                         }, void 0, false, {
                                             fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                            lineNumber: 349,
+                                            lineNumber: 381,
                                             columnNumber: 33
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                        lineNumber: 348,
+                                        lineNumber: 380,
                                         columnNumber: 29
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                lineNumber: 341,
+                                lineNumber: 373,
                                 columnNumber: 25
                             }, this)
                         ]
                     }, `${cam.id}-${streamReloadKey}`, true, {
                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                        lineNumber: 304,
+                        lineNumber: 336,
                         columnNumber: 21
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                lineNumber: 296,
+                lineNumber: 328,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -589,22 +619,22 @@ function CCTVPage() {
                                     className: "w-4 h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                    lineNumber: 360,
+                                    lineNumber: 392,
                                     columnNumber: 25
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                lineNumber: 359,
+                                lineNumber: 391,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         className: "font-semibold text-slate-800 dark:text-slate-200",
-                                        children: "Pusat Laboratorium Terpadu — Infrastruktur Jaringan Lokal"
+                                        children: "Pusat Laboratorium Terpadu: Infrastruktur Jaringan Lokal"
                                     }, void 0, false, {
                                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                        lineNumber: 363,
+                                        lineNumber: 395,
                                         columnNumber: 25
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -612,19 +642,19 @@ function CCTVPage() {
                                         children: "CCTV terhubung ke LAN switch khusus (172.20.32.x) dan ditransmisikan melalui Raspberry Pi 5 MediaMTX."
                                     }, void 0, false, {
                                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                        lineNumber: 366,
+                                        lineNumber: 398,
                                         columnNumber: 25
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                                lineNumber: 362,
+                                lineNumber: 394,
                                 columnNumber: 21
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                        lineNumber: 358,
+                        lineNumber: 390,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -632,23 +662,23 @@ function CCTVPage() {
                         children: "Protokol: RTSP → WebRTC / HLS"
                     }, void 0, false, {
                         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                        lineNumber: 371,
+                        lineNumber: 403,
                         columnNumber: 17
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-                lineNumber: 357,
+                lineNumber: 389,
                 columnNumber: 13
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/(dashboard)/cctv/page.tsx",
-        lineNumber: 156,
+        lineNumber: 188,
         columnNumber: 9
     }, this);
 }
-_s(CCTVPage, "K8SRIYVR4+gxPTdbvi0kLCpTH5w=");
+_s(CCTVPage, "P99k2jqdBjEcqqSW4kwu/nWgRMk=");
 _c = CCTVPage;
 var _c;
 __turbopack_context__.k.register(_c, "CCTVPage");

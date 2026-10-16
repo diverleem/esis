@@ -64,10 +64,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Validasi role yang boleh dibuat (hanya admin dan security)
-        if (!["admin", "security"].includes(role)) {
+        // Validasi role yang boleh dibuat (hanya admin dan staff)
+        if (!["admin", "staff", "security"].includes(role)) {
             return NextResponse.json(
-                { success: false, message: "Role harus berupa 'admin' atau 'security'." },
+                { success: false, message: "Peran harus berupa 'admin' atau 'staff'." },
                 { status: 400 }
             );
         }
@@ -102,6 +102,15 @@ export async function POST(request: NextRequest) {
             .single();
 
         if (insertError) {
+            if (insertError.message.includes("users_role_check")) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: "Tabel pengguna di Supabase belum diperbarui untuk role 'staff'. Silakan jalankan query di update_role_constraint.sql pada SQL Editor Supabase: ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_role_check; ALTER TABLE public.users ADD CONSTRAINT users_role_check CHECK (role IN ('superadmin', 'admin', 'staff', 'security'));",
+                    },
+                    { status: 400 }
+                );
+            }
             return NextResponse.json({ success: false, message: insertError.message }, { status: 500 });
         }
 
@@ -114,6 +123,64 @@ export async function POST(request: NextRequest) {
         console.error("Error creating user:", err);
         return NextResponse.json(
             { success: false, message: "Terjadi kesalahan pada server." },
+            { status: 500 }
+        );
+    }
+}
+
+// DELETE /api/users - Hanya superadmin yang dapat menghapus user
+export async function DELETE(request: NextRequest) {
+    const token = request.cookies.get("session_token")?.value;
+    const session = token ? await verifySession(token) : null;
+
+    if (!session || session.role !== "superadmin") {
+        return NextResponse.json(
+            { success: false, message: "Akses ditolak. Hanya superadmin yang diizinkan menghapus pengguna." },
+            { status: 403 }
+        );
+    }
+
+    try {
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id");
+        const username = searchParams.get("username");
+
+        if (!id && !username) {
+            return NextResponse.json(
+                { success: false, message: "ID atau username pengguna wajib disertakan." },
+                { status: 400 }
+            );
+        }
+
+        // Cegah superadmin menghapus akun yang sedang dipakai login
+        if ((username && username === session.username) || (id && id === session.id)) {
+            return NextResponse.json(
+                { success: false, message: "Anda tidak dapat menghapus akun Anda sendiri saat sedang masuk." },
+                { status: 400 }
+            );
+        }
+
+        const supabase = getSupabaseClient();
+        let query = supabase.from("users").delete();
+        if (id) {
+            query = query.eq("id", id);
+        } else if (username) {
+            query = query.eq("username", username);
+        }
+
+        const { error } = await query;
+        if (error) {
+            return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: `Pengguna ${username || id} berhasil dihapus.`,
+        });
+    } catch (err: unknown) {
+        console.error("Error deleting user:", err);
+        return NextResponse.json(
+            { success: false, message: "Terjadi kesalahan pada server saat menghapus pengguna." },
             { status: 500 }
         );
     }

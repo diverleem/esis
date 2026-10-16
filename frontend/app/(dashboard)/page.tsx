@@ -92,11 +92,20 @@ const initialRecentIncidents = [
 export default function DashboardPage() {
     const { theme } = useTheme();
     const [mounted, setMounted] = useState(false);
+    const [currentUser, setCurrentUser] = useState<{ id: string; username: string; role: string; name?: string } | null>(null);
     const [incidents, setIncidents] = useState(initialRecentIncidents);
     const [filterStatus, setFilterStatus] = useState<string>("all");
 
     useEffect(() => {
         setMounted(true);
+        fetch("/api/auth/me")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (data?.authenticated && data?.user) {
+                    setCurrentUser(data.user);
+                }
+            })
+            .catch(() => {});
     }, []);
 
     const isDark = mounted && theme === "dark";
@@ -487,7 +496,7 @@ export default function DashboardPage() {
                                         </td>
                                         <td className="py-3 text-slate-600 dark:text-slate-300">{row.pelaku}</td>
                                         <td className="py-3 text-right pr-1">
-                                            {row.statusType === "pending" ? (
+                                            {row.statusType === "pending" && currentUser?.role === "admin" ? (
                                                 <button
                                                     type="button"
                                                     onClick={() => handleVerify(row.id)}

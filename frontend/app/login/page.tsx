@@ -25,7 +25,7 @@ export default function LoginPage() {
             const data = await res.json();
 
             if (!res.ok || !data.success) {
-                setErrorMsg(data.message || "Gagal masuk. Periksa username dan kata sandi Anda.");
+                setErrorMsg(data.message || "Gagal masuk. Periksa nama pengguna dan kata sandi Anda.");
                 setIsLoading(false);
                 return;
             }
@@ -67,7 +67,7 @@ export default function LoginPage() {
                         Pengawasan Kawasan Tanpa Rokok Laboratorium Kampus
                     </h1>
                     <p className="text-sm text-slate-300 leading-relaxed">
-                        Sistem pemantauan CCTV streaming real-time terintegrasi dengan Computer Vision untuk deteksi aktivitas merokok dan penegakan tata tertib akademik.
+                        Pemantauan CCTV live terintegrasi dengan Computer Vision untuk deteksi aktivitas merokok di area laboratorium.
                     </p>
 
                     <div className="grid grid-cols-2 gap-3 pt-3 text-xs font-mono">
@@ -114,7 +114,7 @@ export default function LoginPage() {
                         {/* Input Username */}
                         <div className="space-y-1.5">
                             <label className="font-semibold text-slate-700 dark:text-slate-300 block">
-                                Username Petugas
+                                Nama Pengguna
                             </label>
                             <div className="relative">
                                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -125,7 +125,7 @@ export default function LoginPage() {
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-neutral-800 transition-all"
-                                    placeholder="Contoh: superadmin-esis"
+                                    placeholder="Nama pengguna"
                                     required
                                     autoFocus
                                 />
@@ -169,17 +169,17 @@ export default function LoginPage() {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span>Memverifikasi Akun...</span>
+                                    <span>Memverifikasi...</span>
                                 </>
                             ) : (
-                                <span>Masuk ke Dashboard</span>
+                                <span>Masuk</span>
                             )}
                         </button>
                     </form>
 
-                    {/* Informasi Tingkat Akses */}
+                    {/* Catatan Hak Akses Sistem */}
                     <div className="pt-2 text-center border-t border-slate-100 dark:border-neutral-800 text-[11px] text-slate-400">
-                        Otorisasi: Superadmin, Admin Laboran, Security PLT
+                        Pusat Laboratorium Terpadu • Akses terbatas petugas
                     </div>
                 </div>
             </div>

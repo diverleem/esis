@@ -89,12 +89,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const navItems = [
-        { name: "Dashboard Utama", href: "/", icon: LayoutDashboard },
-        { name: "Monitoring CCTV", href: "/cctv", icon: Video },
-        { name: "Log Pelanggaran", href: "/violation", icon: ShieldAlert },
-        { name: "Pengaturan Sistem", href: "/settings", icon: Sliders },
+    const allNavItems = [
+        { name: "Dasbor", href: "/", icon: LayoutDashboard },
+        { name: "Pemantauan CCTV", href: "/cctv", icon: Video },
+        { name: "Catatan Pelanggaran", href: "/violation", icon: ShieldAlert },
+        { name: "Pengaturan", href: "/settings", icon: Sliders, superadminOnly: true },
     ];
+
+    const navItems = allNavItems.filter(
+        (item) => !item.superadminOnly || currentUser?.role === "superadmin"
+    );
 
     const handleLogout = async () => {
         try {
@@ -106,8 +110,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     };
 
     const getPageTitle = () => {
-        if (pathname === "/") return "Dashboard Utama";
-        const item = navItems.find(n => pathname.startsWith(n.href) && n.href !== "/");
+        if (pathname === "/") return "Dasbor";
+        const item = allNavItems.find(n => pathname.startsWith(n.href) && n.href !== "/");
         return item ? item.name : "Halaman";
     };
 

@@ -45,7 +45,7 @@ function LoginPage() {
             });
             const data = await res.json();
             if (!res.ok || !data.success) {
-                setErrorMsg(data.message || "Gagal masuk. Periksa username dan kata sandi Anda.");
+                setErrorMsg(data.message || "Gagal masuk. Periksa nama pengguna dan kata sandi Anda.");
                 setIsLoading(false);
                 return;
             }
@@ -159,7 +159,7 @@ function LoginPage() {
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 className: "text-sm text-slate-300 leading-relaxed",
-                                children: "Sistem pemantauan CCTV streaming real-time terintegrasi dengan Computer Vision untuk deteksi aktivitas merokok dan penegakan tata tertib akademik."
+                                children: "Pemantauan CCTV live terintegrasi dengan Computer Vision untuk deteksi aktivitas merokok di area laboratorium."
                             }, void 0, false, {
                                 fileName: "[project]/app/login/page.tsx",
                                 lineNumber: 69,
@@ -305,7 +305,7 @@ function LoginPage() {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                             className: "font-semibold text-slate-700 dark:text-slate-300 block",
-                                            children: "Username Petugas"
+                                            children: "Nama Pengguna"
                                         }, void 0, false, {
                                             fileName: "[project]/app/login/page.tsx",
                                             lineNumber: 116,
@@ -333,7 +333,7 @@ function LoginPage() {
                                                     value: username,
                                                     onChange: (e)=>setUsername(e.target.value),
                                                     className: "w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-neutral-800 transition-all",
-                                                    placeholder: "Contoh: superadmin-esis",
+                                                    placeholder: "Nama pengguna",
                                                     required: true,
                                                     autoFocus: true
                                                 }, void 0, false, {
@@ -442,7 +442,7 @@ function LoginPage() {
                                                 columnNumber: 37
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                children: "Memverifikasi Akun..."
+                                                children: "Memverifikasi..."
                                             }, void 0, false, {
                                                 fileName: "[project]/app/login/page.tsx",
                                                 lineNumber: 172,
@@ -454,7 +454,7 @@ function LoginPage() {
                                         lineNumber: 170,
                                         columnNumber: 33
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                        children: "Masuk ke Dashboard"
+                                        children: "Masuk"
                                     }, void 0, false, {
                                         fileName: "[project]/app/login/page.tsx",
                                         lineNumber: 175,
@@ -473,7 +473,7 @@ function LoginPage() {
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "pt-2 text-center border-t border-slate-100 dark:border-neutral-800 text-[11px] text-slate-400",
-                            children: "Otorisasi: Superadmin, Admin Laboran, Security PLT"
+                            children: "Pusat Laboratorium Terpadu • Akses terbatas petugas"
                         }, void 0, false, {
                             fileName: "[project]/app/login/page.tsx",
                             lineNumber: 181,
