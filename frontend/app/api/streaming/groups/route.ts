@@ -73,17 +73,30 @@ export async function POST(request: NextRequest) {
         const cleanName = name.trim();
         const supabase = getSupabaseClient();
 
+        // Cek apakah grup dengan nama yang sama sudah ada (case-insensitive)
+        const { data: existingGroup } = await supabase
+            .from("streaming_groups")
+            .select("id, name")
+            .ilike("name", cleanName)
+            .maybeSingle();
+
+        if (existingGroup) {
+            return NextResponse.json(
+                { success: false, message: `Grup lokasi "${existingGroup.name}" sudah ada.` },
+                { status: 400 }
+            );
+        }
+
         const { data, error } = await supabase
             .from("streaming_groups")
             .insert({ name: cleanName })
-            .select("id, name")
+            .select("id, name, created_at")
             .single();
 
         if (error) {
-            // Jika grup sudah ada
             if (error.code === "23505") {
                 return NextResponse.json(
-                    { success: false, message: `Grup "${cleanName}" sudah ada.` },
+                    { success: false, message: `Grup lokasi "${cleanName}" sudah ada.` },
                     { status: 400 }
                 );
             }
@@ -130,39 +143,55 @@ export async function DELETE(request: NextRequest) {
 
         const supabase = getSupabaseClient();
 
-        // Cek apakah ada kamera yang saat ini menggunakan grup ini
-        if (name) {
-            const { count } = await supabase
-                .from("streaming")
-                .select("id", { count: "exact", head: true })
-                .eq("location_group", name);
-
-            if (count && count > 0) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        message: `Grup "${name}" tidak dapat dihapus karena masih digunakan oleh ${count} kamera.`,
-                    },
-                    { status: 400 }
-                );
-            }
-        }
-
-        let query = supabase.from("streaming_groups").delete();
+        // Cari grup target terlebih dahulu
+        let findQuery = supabase.from("streaming_groups").select("id, name");
         if (id) {
-            query = query.eq("id", id);
+            findQuery = findQuery.eq("id", id);
         } else if (name) {
-            query = query.eq("name", name);
+            findQuery = findQuery.eq("name", name);
         }
 
-        const { error } = await query;
-        if (error) {
-            return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+        const { data: targetGroup, error: findError } = await findQuery.maybeSingle();
+
+        if (findError) {
+            return NextResponse.json({ success: false, message: findError.message }, { status: 500 });
+        }
+
+        if (!targetGroup) {
+            return NextResponse.json(
+                { success: false, message: "Grup lokasi tidak ditemukan." },
+                { status: 404 }
+            );
+        }
+
+        // Cek apakah ada kamera yang saat ini menggunakan grup ini
+        const { count } = await supabase
+            .from("streaming")
+            .select("id", { count: "exact", head: true })
+            .or(`location_group.eq."${targetGroup.name}",floor.eq."${targetGroup.name}"`);
+
+        if (count && count > 0) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: `Grup "${targetGroup.name}" tidak dapat dihapus karena masih digunakan oleh ${count} kamera CCTV.`,
+                },
+                { status: 400 }
+            );
+        }
+
+        const { error: deleteError } = await supabase
+            .from("streaming_groups")
+            .delete()
+            .eq("id", targetGroup.id);
+
+        if (deleteError) {
+            return NextResponse.json({ success: false, message: deleteError.message }, { status: 500 });
         }
 
         return NextResponse.json({
             success: true,
-            message: `Grup lokasi "${name || id}" berhasil dihapus.`,
+            message: `Grup lokasi "${targetGroup.name}" berhasil dihapus.`,
         });
     } catch (err: unknown) {
         console.error("DELETE /api/streaming/groups error:", err);

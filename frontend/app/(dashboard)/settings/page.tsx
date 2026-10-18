@@ -75,7 +75,31 @@ export default function SettingsPage() {
     const [revealedPasswords, setRevealedPasswords] = useState<Record<string | number, boolean>>({});
     const [copiedIndex, setCopiedIndex] = useState<string | number | null>(null);
     const [isSyncingMtx, setIsSyncingMtx] = useState(false);
-    const [feedbackMsg, setFeedbackMsg] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
+
+    // Universal Floating Alert/Toast State (z-[100] selalu di atas semua modal)
+    const [alertToast, setAlertToast] = useState<{
+        type: "success" | "error" | "info";
+        title: string;
+        message: string;
+    } | null>(null);
+
+    const showAlert = (type: "success" | "error" | "info", message: string, title?: string) => {
+        const defaultTitle = type === "success" ? "Berhasil" : type === "error" ? "Terjadi Kesalahan" : "Pemberitahuan";
+        setAlertToast({
+            type,
+            title: title || defaultTitle,
+            message,
+        });
+    };
+
+    // Auto-dismiss alert toast setelah 5 detik
+    useEffect(() => {
+        if (!alertToast) return;
+        const timer = setTimeout(() => {
+            setAlertToast(null);
+        }, 5000);
+        return () => clearTimeout(timer);
+    }, [alertToast]);
 
     // Grouping Lokasi State
     const [groups, setGroups] = useState<GroupItem[]>([
@@ -85,12 +109,14 @@ export default function SettingsPage() {
     const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
     const [newGroupName, setNewGroupName] = useState("");
     const [groupSubmitting, setGroupSubmitting] = useState(false);
+    const [groupModalMsg, setGroupModalMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     // Modal Form (Tambah & Edit Kamera Sederhana)
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
     const [formSubmitting, setFormSubmitting] = useState(false);
     const [showFormPassword, setShowFormPassword] = useState(false);
+    const [cameraModalError, setCameraModalError] = useState<string | null>(null);
 
     // Form data sederhana sesuai kebutuhan user
     const [formData, setFormData] = useState({
@@ -106,6 +132,7 @@ export default function SettingsPage() {
     // Modal Konfirmasi Hapus Kamera
     const [deleteTarget, setDeleteTarget] = useState<StreamItem | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteModalError, setDeleteModalError] = useState<string | null>(null);
 
     // Form Pengaturan AI Detection Threshold
     const [aiConfig, setAiConfig] = useState({
@@ -171,10 +198,10 @@ export default function SettingsPage() {
                 setStreams(data.streams);
                 setDbTableMissing(Boolean(data.db_table_missing));
             } else if (data.message) {
-                setFeedbackMsg({ type: "error", text: data.message });
+                showAlert("error", data.message);
             }
         } catch {
-            setFeedbackMsg({ type: "error", text: "Gagal memuat data streaming dari server." });
+            showAlert("error", "Gagal memuat data streaming dari server.");
         } finally {
             setLoadingStreams(false);
         }
@@ -239,7 +266,7 @@ export default function SettingsPage() {
     const handleSubmitForm = async (e: React.FormEvent) => {
         e.preventDefault();
         setFormSubmitting(true);
-        setFeedbackMsg(null);
+        setCameraModalError(null);
 
         try {
             const method = modalMode === "add" ? "POST" : "PATCH";
@@ -251,23 +278,18 @@ export default function SettingsPage() {
             const data = await res.json();
 
             if (res.ok && data.success) {
-                setFeedbackMsg({
-                    type: "success",
-                    text: data.message || `Kamera ${formData.label} berhasil disimpan.`,
-                });
+                showAlert("success", data.message || `Kamera "${formData.label}" berhasil disimpan.`);
                 setIsModalOpen(false);
                 loadStreams();
             } else {
-                setFeedbackMsg({
-                    type: "error",
-                    text: data.message || "Gagal menyimpan data streaming.",
-                });
+                const errMsg = data.message || "Gagal menyimpan data streaming.";
+                setCameraModalError(errMsg);
+                showAlert("error", errMsg);
             }
         } catch {
-            setFeedbackMsg({
-                type: "error",
-                text: "Terjadi kesalahan jaringan saat menyimpan kamera.",
-            });
+            const errMsg = "Terjadi kesalahan jaringan saat menyimpan kamera.";
+            setCameraModalError(errMsg);
+            showAlert("error", errMsg);
         } finally {
             setFormSubmitting(false);
         }
@@ -277,7 +299,7 @@ export default function SettingsPage() {
     const handleConfirmDelete = async () => {
         if (!deleteTarget) return;
         setIsDeleting(true);
-        setFeedbackMsg(null);
+        setDeleteModalError(null);
 
         try {
             const res = await fetch(`/api/streaming?id=${deleteTarget.id}&name=${encodeURIComponent(deleteTarget.name)}`, {
@@ -286,23 +308,18 @@ export default function SettingsPage() {
             const data = await res.json();
 
             if (res.ok && data.success) {
-                setFeedbackMsg({
-                    type: "success",
-                    text: data.message || `Kamera ${deleteTarget.label} berhasil dihapus.`,
-                });
+                showAlert("success", data.message || `Kamera "${deleteTarget.label}" berhasil dihapus.`);
                 setDeleteTarget(null);
                 loadStreams();
             } else {
-                setFeedbackMsg({
-                    type: "error",
-                    text: data.message || "Gagal menghapus kamera.",
-                });
+                const errMsg = data.message || "Gagal menghapus kamera.";
+                setDeleteModalError(errMsg);
+                showAlert("error", errMsg);
             }
         } catch {
-            setFeedbackMsg({
-                type: "error",
-                text: "Terjadi kesalahan jaringan saat menghapus kamera.",
-            });
+            const errMsg = "Terjadi kesalahan jaringan saat menghapus kamera.";
+            setDeleteModalError(errMsg);
+            showAlert("error", errMsg);
         } finally {
             setIsDeleting(false);
         }
@@ -311,29 +328,20 @@ export default function SettingsPage() {
     // Sinkronisasi dengan MediaMTX
     const handleSyncMediaMtx = async () => {
         setIsSyncingMtx(true);
-        setFeedbackMsg(null);
 
         try {
             const res = await fetch("/api/streaming/sync", { method: "POST" });
             const data = await res.json();
 
             if (res.ok && data.success) {
-                setFeedbackMsg({
-                    type: "success",
-                    text: data.message || "Sinkronisasi MediaMTX berhasil diselesaikan.",
-                });
+                showAlert("success", data.message || "Sinkronisasi MediaMTX berhasil diselesaikan.");
                 loadStreams();
             } else {
-                setFeedbackMsg({
-                    type: "error",
-                    text: data.message || "Gagal menyinkronkan data dengan MediaMTX.",
-                });
+                const errMsg = data.message || "Gagal menyinkronkan data dengan MediaMTX.";
+                showAlert("error", errMsg);
             }
         } catch {
-            setFeedbackMsg({
-                type: "error",
-                text: "Terjadi kesalahan koneksi ke MediaMTX server.",
-            });
+            showAlert("error", "Terjadi kesalahan koneksi ke server MediaMTX.");
         } finally {
             setIsSyncingMtx(false);
         }
@@ -342,25 +350,36 @@ export default function SettingsPage() {
     // Tambah Grup Baru
     const handleAddGroup = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newGroupName.trim()) return;
+        const cleanName = newGroupName.trim();
+        if (!cleanName) {
+            setGroupModalMsg({ type: "error", text: "Nama grup lokasi tidak boleh kosong." });
+            showAlert("error", "Nama grup lokasi tidak boleh kosong.");
+            return;
+        }
         setGroupSubmitting(true);
+        setGroupModalMsg(null);
 
         try {
             const res = await fetch("/api/streaming/groups", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: newGroupName.trim() }),
+                body: JSON.stringify({ name: cleanName }),
             });
             const data = await res.json();
             if (res.ok && data.success) {
                 setNewGroupName("");
                 loadGroups();
-                setFeedbackMsg({ type: "success", text: data.message });
+                setGroupModalMsg({ type: "success", text: data.message || `Grup "${cleanName}" berhasil ditambahkan.` });
+                showAlert("success", data.message || `Grup "${cleanName}" berhasil ditambahkan.`);
             } else {
-                setFeedbackMsg({ type: "error", text: data.message || "Gagal menambah grup." });
+                const errMsg = data.message || "Gagal menambah grup.";
+                setGroupModalMsg({ type: "error", text: errMsg });
+                showAlert("error", errMsg);
             }
         } catch {
-            setFeedbackMsg({ type: "error", text: "Terjadi kesalahan saat menambah grup." });
+            const errMsg = "Terjadi kesalahan jaringan saat menambah grup.";
+            setGroupModalMsg({ type: "error", text: errMsg });
+            showAlert("error", errMsg);
         } finally {
             setGroupSubmitting(false);
         }
@@ -369,6 +388,7 @@ export default function SettingsPage() {
     // Hapus Grup Lokasi
     const handleDeleteGroup = async (groupName: string) => {
         if (!confirm(`Hapus grup lokasi "${groupName}"?`)) return;
+        setGroupModalMsg(null);
 
         try {
             const res = await fetch(`/api/streaming/groups?name=${encodeURIComponent(groupName)}`, {
@@ -380,12 +400,17 @@ export default function SettingsPage() {
                 if (selectedGroupFilter === groupName) {
                     setSelectedGroupFilter("all");
                 }
-                setFeedbackMsg({ type: "success", text: data.message });
+                setGroupModalMsg({ type: "success", text: data.message || `Grup "${groupName}" berhasil dihapus.` });
+                showAlert("success", data.message || `Grup "${groupName}" berhasil dihapus.`);
             } else {
-                setFeedbackMsg({ type: "error", text: data.message || "Gagal menghapus grup." });
+                const errMsg = data.message || "Gagal menghapus grup.";
+                setGroupModalMsg({ type: "error", text: errMsg });
+                showAlert("error", errMsg);
             }
         } catch {
-            setFeedbackMsg({ type: "error", text: "Terjadi kesalahan saat menghapus grup." });
+            const errMsg = "Terjadi kesalahan jaringan saat menghapus grup.";
+            setGroupModalMsg({ type: "error", text: errMsg });
+            showAlert("error", errMsg);
         }
     };
 
@@ -419,6 +444,7 @@ export default function SettingsPage() {
     const handleSaveAi = (e: React.FormEvent) => {
         e.preventDefault();
         setAiSaved(true);
+        showAlert("success", "Parameter deteksi AI berhasil disimpan.");
         setTimeout(() => setAiSaved(false), 3000);
     };
 
@@ -436,14 +462,20 @@ export default function SettingsPage() {
             const data = await res.json();
 
             if (res.ok && data.success) {
-                setUserMessage({ type: "success", text: data.message || "Pengguna berhasil ditambahkan." });
+                const successMsg = data.message || "Pengguna berhasil ditambahkan.";
+                setUserMessage({ type: "success", text: successMsg });
+                showAlert("success", successMsg);
                 setUserForm({ username: "", password: "", name: "", role: "admin" });
                 loadUsers();
             } else {
-                setUserMessage({ type: "error", text: data.message || "Gagal menambahkan pengguna." });
+                const errMsg = data.message || "Gagal menambahkan pengguna.";
+                setUserMessage({ type: "error", text: errMsg });
+                showAlert("error", errMsg);
             }
         } catch {
-            setUserMessage({ type: "error", text: "Terjadi kesalahan jaringan saat menambahkan pengguna." });
+            const errMsg = "Terjadi kesalahan jaringan saat menambahkan pengguna.";
+            setUserMessage({ type: "error", text: errMsg });
+            showAlert("error", errMsg);
         } finally {
             setUserSubmitting(false);
         }
@@ -463,13 +495,19 @@ export default function SettingsPage() {
             const data = await res.json();
 
             if (res.ok && data.success) {
-                setUserMessage({ type: "success", text: data.message || `Pengguna ${user.username} berhasil dihapus.` });
+                const successMsg = data.message || `Pengguna "${user.name || user.username}" berhasil dihapus.`;
+                setUserMessage({ type: "success", text: successMsg });
+                showAlert("success", successMsg);
                 loadUsers();
             } else {
-                setUserMessage({ type: "error", text: data.message || "Gagal menghapus pengguna." });
+                const errMsg = data.message || "Gagal menghapus pengguna.";
+                setUserMessage({ type: "error", text: errMsg });
+                showAlert("error", errMsg);
             }
         } catch {
-            setUserMessage({ type: "error", text: "Terjadi kesalahan jaringan saat menghapus pengguna." });
+            const errMsg = "Terjadi kesalahan jaringan saat menghapus pengguna.";
+            setUserMessage({ type: "error", text: errMsg });
+            showAlert("error", errMsg);
         } finally {
             setDeletingUserId(null);
         }
@@ -496,7 +534,62 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="space-y-5">
+        <div className="space-y-5 relative">
+            {/* Floating Alert Toast (z-[100] Selalu Muncul di Pojok Atas, Tampak Jelas Baik Saat Modal Terbuka Maupun Tertutup) */}
+            {alertToast && (
+                <div className="fixed top-5 right-5 sm:right-8 z-[100] max-w-sm w-full animate-in slide-in-from-top-4 fade-in duration-300">
+                    <div
+                        className={`p-4 rounded-xl border shadow-2xl flex items-start justify-between gap-3 backdrop-blur-md ${
+                            alertToast.type === "success"
+                                ? "bg-white/95 dark:bg-neutral-900/95 border-emerald-500 text-slate-900 dark:text-white"
+                                : alertToast.type === "error"
+                                ? "bg-white/95 dark:bg-neutral-900/95 border-rose-500 text-slate-900 dark:text-white"
+                                : "bg-white/95 dark:bg-neutral-900/95 border-blue-500 text-slate-900 dark:text-white"
+                        }`}
+                    >
+                        <div className="flex items-start space-x-3">
+                            <div className={`p-2 rounded-lg shrink-0 ${
+                                alertToast.type === "success"
+                                    ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400"
+                                    : alertToast.type === "error"
+                                    ? "bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400"
+                                    : "bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400"
+                            }`}>
+                                {alertToast.type === "success" ? (
+                                    <CheckCircle2 className="w-5 h-5" />
+                                ) : alertToast.type === "error" ? (
+                                    <AlertCircle className="w-5 h-5" />
+                                ) : (
+                                    <Radio className="w-5 h-5" />
+                                )}
+                            </div>
+                            <div className="space-y-0.5">
+                                <h4 className={`text-xs font-bold leading-tight ${
+                                    alertToast.type === "success"
+                                        ? "text-emerald-700 dark:text-emerald-400"
+                                        : alertToast.type === "error"
+                                        ? "text-rose-700 dark:text-rose-400"
+                                        : "text-blue-700 dark:text-blue-400"
+                                }`}>
+                                    {alertToast.title}
+                                </h4>
+                                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                                    {alertToast.message}
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setAlertToast(null)}
+                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 shrink-0 transition-colors"
+                            aria-label="Tutup alert"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Header Pengaturan Sistem */}
             <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-5 shadow-2xs">
                 <div>
@@ -556,37 +649,6 @@ export default function SettingsPage() {
                     </button>
                 </div>
             </div>
-
-            {/* Alert Feedback Pesan */}
-            {feedbackMsg && (
-                <div
-                    className={`p-3.5 rounded-lg border text-xs flex items-center justify-between shadow-2xs ${
-                        feedbackMsg.type === "success"
-                            ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
-                            : feedbackMsg.type === "error"
-                            ? "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300"
-                            : "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300"
-                    }`}
-                >
-                    <div className="flex items-center space-x-2">
-                        {feedbackMsg.type === "success" ? (
-                            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                        ) : feedbackMsg.type === "error" ? (
-                            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
-                        ) : (
-                            <Loader2 className="w-4 h-4 shrink-0 animate-spin text-blue-600" />
-                        )}
-                        <span>{feedbackMsg.text}</span>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => setFeedbackMsg(null)}
-                        className="text-xs opacity-60 hover:opacity-100 font-semibold ml-4"
-                    >
-                        Tutup
-                    </button>
-                </div>
-            )}
 
             {/* KONTEN TAB KHUSUS SUPERADMIN: CRUD STREAMING CCTV */}
             {activeTab === "cctv_crud" && isSuperadmin && (
@@ -861,6 +923,23 @@ export default function SettingsPage() {
                             </button>
                         </div>
 
+                        {/* Alert Error di dalam Modal Kamera */}
+                        {cameraModalError && (
+                            <div className="p-3 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 rounded-lg text-rose-800 dark:text-rose-300 text-xs flex items-start justify-between shadow-2xs animate-in fade-in duration-200">
+                                <div className="flex items-start space-x-2">
+                                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                                    <span className="font-medium leading-relaxed">{cameraModalError}</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setCameraModalError(null)}
+                                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-2"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
                         <form onSubmit={handleSubmitForm} className="space-y-3.5 text-xs">
                             {/* 1. Nama Kamera */}
                             <div className="space-y-1">
@@ -1025,12 +1104,42 @@ export default function SettingsPage() {
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setIsGroupModalOpen(false)}
+                                onClick={() => {
+                                    setIsGroupModalOpen(false);
+                                    setGroupModalMsg(null);
+                                }}
                                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold"
                             >
                                 ✕
                             </button>
                         </div>
+
+                        {/* Alert Status di dalam Modal Kelola Grup */}
+                        {groupModalMsg && (
+                            <div
+                                className={`p-3 rounded-lg border text-xs flex items-start justify-between shadow-2xs animate-in fade-in duration-200 ${
+                                    groupModalMsg.type === "success"
+                                        ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
+                                        : "bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300"
+                                }`}
+                            >
+                                <div className="flex items-start space-x-2">
+                                    {groupModalMsg.type === "success" ? (
+                                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+                                    ) : (
+                                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                                    )}
+                                    <span className="font-medium leading-relaxed">{groupModalMsg.text}</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setGroupModalMsg(null)}
+                                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-2"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
 
                         {/* Form Tambah Grup Baru */}
                         <form onSubmit={handleAddGroup} className="space-y-2">
@@ -1129,10 +1238,29 @@ export default function SettingsPage() {
                             Kamera <span className="font-bold text-slate-900 dark:text-white">{deleteTarget.label}</span> akan dihapus dari basis data dan kedua path di MediaMTX Control API (<code className="font-mono text-rose-600">{deleteTarget.ecam_path}</code> & <code className="font-mono text-rose-600">{deleteTarget.cam_path}</code>) akan ditiadakan.
                         </p>
 
+                        {deleteModalError && (
+                            <div className="p-3 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 rounded-lg text-rose-800 dark:text-rose-300 text-xs flex items-start justify-between shadow-2xs">
+                                <div className="flex items-start space-x-2">
+                                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                                    <span className="font-medium leading-relaxed">{deleteModalError}</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setDeleteModalError(null)}
+                                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-2"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
                         <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100 dark:border-neutral-800 text-xs">
                             <button
                                 type="button"
-                                onClick={() => setDeleteTarget(null)}
+                                onClick={() => {
+                                    setDeleteTarget(null);
+                                    setDeleteModalError(null);
+                                }}
                                 className="px-3.5 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-lg font-medium transition-colors"
                             >
                                 Batal

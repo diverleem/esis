@@ -161,21 +161,47 @@ export async function DELETE(request: NextRequest) {
         }
 
         const supabase = getSupabaseClient();
-        let query = supabase.from("users").delete();
+
+        // Cari pengguna yang ingin dihapus terlebih dahulu
+        let findQuery = supabase.from("users").select("id, username, role, name");
         if (id) {
-            query = query.eq("id", id);
+            findQuery = findQuery.eq("id", id);
         } else if (username) {
-            query = query.eq("username", username);
+            findQuery = findQuery.eq("username", username);
         }
 
-        const { error } = await query;
-        if (error) {
-            return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+        const { data: targetUser, error: findError } = await findQuery.maybeSingle();
+
+        if (findError) {
+            return NextResponse.json({ success: false, message: findError.message }, { status: 500 });
+        }
+
+        if (!targetUser) {
+            return NextResponse.json(
+                { success: false, message: "Pengguna tidak ditemukan." },
+                { status: 404 }
+            );
+        }
+
+        // Cegah superadmin menghapus akun yang sedang dipakai login
+        if (
+            (session.username && targetUser.username.toLowerCase() === session.username.toLowerCase()) ||
+            (session.id && targetUser.id === session.id)
+        ) {
+            return NextResponse.json(
+                { success: false, message: "Anda tidak dapat menghapus akun Anda sendiri saat sedang masuk." },
+                { status: 400 }
+            );
+        }
+
+        const { error: deleteError } = await supabase.from("users").delete().eq("id", targetUser.id);
+        if (deleteError) {
+            return NextResponse.json({ success: false, message: deleteError.message }, { status: 500 });
         }
 
         return NextResponse.json({
             success: true,
-            message: `Pengguna ${username || id} berhasil dihapus.`,
+            message: `Pengguna "${targetUser.name || targetUser.username}" (@${targetUser.username}) berhasil dihapus.`,
         });
     } catch (err: unknown) {
         console.error("Error deleting user:", err);
