@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/utils/auth";
 import { createClient } from "@supabase/supabase-js";
-import { parseRtspUrl, slugifyCameraName } from "@/utils/rtsp";
+import { generateDualRtspPaths } from "@/utils/rtsp";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,47 @@ function getSupabaseClient() {
     return createClient(supabaseUrl, supabaseKey);
 }
 
-// POST /api/streaming/sync - Sinkronisasi otomatis path MediaMTX dengan database Supabase (Superadmin only)
+// Helper untuk menambah atau memperbarui (patch) path di MediaMTX Control API
+async function syncPathToMtx(pathName: string, source: string, baseUrl: string): Promise<boolean> {
+    try {
+        // Coba tambah path baru via POST
+        const addRes = await fetch(`${baseUrl}/v3/config/paths/add/${encodeURIComponent(pathName)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source }),
+        });
+
+        if (addRes.ok) {
+            return true;
+        }
+
+        // Jika path sudah ada (misal return 400 "path already exists"), lakukan PATCH
+        const patchRes = await fetch(`${baseUrl}/v3/config/paths/patch/${encodeURIComponent(pathName)}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source }),
+        });
+
+        return patchRes.ok;
+    } catch (err) {
+        console.error(`MediaMTX sync error for path "${pathName}":`, err);
+        return false;
+    }
+}
+
+// Helper untuk menghapus path lama yang sudah tidak ada di database
+async function deletePathFromMtx(pathName: string, baseUrl: string): Promise<boolean> {
+    try {
+        const res = await fetch(`${baseUrl}/v3/config/paths/delete/${encodeURIComponent(pathName)}`, {
+            method: "DELETE",
+        });
+        return res.ok;
+    } catch {
+        return false;
+    }
+}
+
+// POST /api/streaming/sync - Sinkronisasi konfigurasi streaming dari database Supabase ke MediaMTX Control API (Superadmin only)
 export async function POST(request: NextRequest) {
     const token = request.cookies.get("session_token")?.value;
     const session = token ? await verifySession(token) : null;
@@ -30,144 +70,145 @@ export async function POST(request: NextRequest) {
 
     try {
         const cleanBase = MEDIAMTX_CONFIG_URL.replace(/\/+$/, "");
-        const mtxRes = await fetch(`${cleanBase}/v3/config/paths/list`, {
-            cache: "no-store",
-        });
 
-        if (!mtxRes.ok) {
+        // 1. Periksa ketersediaan MediaMTX Control API
+        let mtxItems: Array<{ name: string; source?: string }> = [];
+        try {
+            const testRes = await fetch(`${cleanBase}/v3/config/paths/list`, {
+                cache: "no-store",
+            });
+            if (!testRes.ok) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: `Server MediaMTX tidak merespons di ${cleanBase} (Status HTTP: ${testRes.status}). Pastikan streaming server aktif.`,
+                    },
+                    { status: 502 }
+                );
+            }
+            const testData = await testRes.json();
+            if (Array.isArray(testData?.items)) {
+                mtxItems = testData.items;
+            }
+        } catch (connErr: unknown) {
+            console.error("Gagal terhubung ke MediaMTX Control API:", connErr);
             return NextResponse.json(
                 {
                     success: false,
-                    message: `Gagal menghubungi MediaMTX Control API di ${cleanBase} (Status HTTP: ${mtxRes.status}).`,
+                    message: `Tidak dapat menghubungi streaming server MediaMTX di ${cleanBase}. Pastikan koneksi atau IP server MediaMTX dapat diakses.`,
                 },
                 { status: 502 }
             );
         }
 
-        const mtxData = await mtxRes.json();
-        const rawItems = Array.isArray(mtxData?.items) ? mtxData.items : [];
+        // 2. Ambil seluruh data kamera aktif dari basis data Supabase
+        const supabase = getSupabaseClient();
+        const { data: streams, error: dbError } = await supabase
+            .from("streaming")
+            .select("*")
+            .order("id", { ascending: true });
 
-        // Kumpulkan dan gabungkan pasangan cam_* & ecam_* menjadi 1 kamera
-        const cameraMap = new Map<string, {
-            slug: string;
-            label: string;
-            location_group: string;
-            ip_address: string;
-            port: number;
-            username_rtsp: string;
-            password_rtsp: string;
-            ecam_path: string;
-            cam_path: string;
-            ecam_source: string;
-            cam_source: string;
-        }>();
-
-        for (const item of rawItems) {
-            if (!item.source || !item.source.startsWith("rtsp://")) continue;
-
-            const isEcam = item.name.startsWith("ecam_");
-            const isCam = item.name.startsWith("cam_");
-            if (!isEcam && !isCam) continue;
-
-            const slug = slugifyCameraName(item.name);
-            const parsed = parseRtspUrl(item.source);
-
-            const label = slug
-                .replace(/_/g, " ")
-                .replace(/\b\w/g, (c) => c.toUpperCase());
-
-            const isLt6 =
-                slug.includes("lt6") ||
-                slug.includes("multimedia") ||
-                slug.includes("apl") ||
-                slug.includes("jaringan") ||
-                slug.includes("tambang") ||
-                slug.includes("mtk");
-
-            const locationGroup = isLt6 ? "Lantai 6 Gedung PLT" : "Lantai 5 Gedung PLT";
-
-            const existing = cameraMap.get(slug) || {
-                slug,
-                label,
-                location_group: locationGroup,
-                ip_address: parsed.ip,
-                port: parsed.port,
-                username_rtsp: parsed.username,
-                password_rtsp: parsed.password,
-                ecam_path: `ecam_${slug}`,
-                cam_path: `cam_${slug}`,
-                ecam_source: "",
-                cam_source: "",
-            };
-
-            if (isEcam) {
-                existing.ecam_source = item.source;
-                if (!existing.ip_address) existing.ip_address = parsed.ip;
-                if (!existing.username_rtsp) existing.username_rtsp = parsed.username;
-                if (!existing.password_rtsp) existing.password_rtsp = parsed.password;
-            }
-            if (isCam) {
-                existing.cam_source = item.source;
-                if (!existing.ip_address) existing.ip_address = parsed.ip;
-                if (!existing.username_rtsp) existing.username_rtsp = parsed.username;
-                if (!existing.password_rtsp) existing.password_rtsp = parsed.password;
-            }
-
-            cameraMap.set(slug, existing);
+        if (dbError) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: `Gagal membaca basis data streaming: ${dbError.message}`,
+                },
+                { status: 500 }
+            );
         }
 
-        const supabase = getSupabaseClient();
-        let successCount = 0;
+        if (!streams || streams.length === 0) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Tidak ada data kamera di database untuk disinkronkan ke MediaMTX.",
+                },
+                { status: 400 }
+            );
+        }
+
+        // 3. Sinkronkan setiap kamera di database ke MediaMTX Control API
+        const validPathNames = new Set<string>();
+        let syncedCamerasCount = 0;
+        let syncedPathsCount = 0;
         const failedItems: string[] = [];
 
-        for (const cam of Array.from(cameraMap.values())) {
-            // Jika salah satu source kosong, buat fallback berdasarkan IP & port yang ada
-            const authPrefix = cam.username_rtsp
-                ? `${encodeURIComponent(cam.username_rtsp)}:${encodeURIComponent(cam.password_rtsp || "")}@`
-                : "";
+        for (const cam of streams) {
+            if (cam.is_active === false) {
+                continue; // Lewati kamera yang dinonaktifkan
+            }
 
-            const ecamSrc = cam.ecam_source || `rtsp://${authPrefix}${cam.ip_address}:${cam.port}/Streaming/Channels/102`;
-            const camSrc = cam.cam_source || `rtsp://${authPrefix}${cam.ip_address}:${cam.port}/Streaming/Channels/101`;
+            // Dapatkan atau buat path RTSP ganda (ecam & cam)
+            let ecamPath = cam.ecam_path;
+            let camPath = cam.cam_path;
+            let ecamSource = cam.ecam_source;
+            let camSource = cam.cam_source;
 
-            const upsertPayload = {
-                name: cam.slug,
-                label: cam.label,
-                location_group: cam.location_group,
-                ip_address: cam.ip_address,
-                port: cam.port || 554,
-                username_rtsp: cam.username_rtsp || null,
-                password_rtsp: cam.password_rtsp || null,
-                ecam_path: cam.ecam_path,
-                cam_path: cam.cam_path,
-                ecam_source: ecamSrc,
-                cam_source: camSrc,
-                protocol: "WebRTC",
-                is_active: true,
-                updated_at: new Date().toISOString(),
-            };
+            if (!ecamPath || !camPath || !ecamSource || !camSource) {
+                const generated = generateDualRtspPaths(cam.label || cam.name, {
+                    ip: cam.ip_address,
+                    port: cam.port || 554,
+                    username: cam.username_rtsp || "",
+                    password: cam.password_rtsp || "",
+                });
+                ecamPath = ecamPath || generated.ecamPath;
+                camPath = camPath || generated.camPath;
+                ecamSource = ecamSource || generated.ecamSource;
+                camSource = camSource || generated.camSource;
+            }
 
-            const { error: upsertError } = await supabase
-                .from("streaming")
-                .upsert(upsertPayload, { onConflict: "name" });
+            validPathNames.add(ecamPath);
+            validPathNames.add(camPath);
 
-            if (upsertError) {
-                failedItems.push(`${cam.slug} (${upsertError.message})`);
+            // Sinkronkan ecam (substream channel 102)
+            const ecamOk = await syncPathToMtx(ecamPath, ecamSource, cleanBase);
+            if (ecamOk) {
+                syncedPathsCount++;
             } else {
-                successCount++;
+                failedItems.push(`${ecamPath} (Gagal push ke MediaMTX)`);
+            }
+
+            // Sinkronkan cam (mainstream HD channel 101)
+            const camOk = await syncPathToMtx(camPath, camSource, cleanBase);
+            if (camOk) {
+                syncedPathsCount++;
+            } else {
+                failedItems.push(`${camPath} (Gagal push ke MediaMTX)`);
+            }
+
+            if (ecamOk && camOk) {
+                syncedCamerasCount++;
+            }
+        }
+
+        // 4. Bersihkan path kamera lawas di MediaMTX yang sudah tidak terdaftar di database
+        let prunedPathsCount = 0;
+        for (const item of mtxItems) {
+            const isCameraPath = item.name.startsWith("cam_") || item.name.startsWith("ecam_");
+            if (isCameraPath && !validPathNames.has(item.name)) {
+                const delOk = await deletePathFromMtx(item.name, cleanBase);
+                if (delOk) {
+                    prunedPathsCount++;
+                }
             }
         }
 
         return NextResponse.json({
             success: true,
-            message: `Sinkronisasi berhasil! ${successCount} kamera fisik (masing-masing memiliki path ecam & cam) telah disesuaikan dengan database.`,
-            synced_count: successCount,
-            total_cameras: cameraMap.size,
+            message: `Sinkronisasi berhasil! ${syncedCamerasCount} kamera (${syncedPathsCount} path streaming) dari database telah disinkronkan ke server MediaMTX.${
+                prunedPathsCount > 0 ? ` Menghapus ${prunedPathsCount} path usang di server streaming.` : ""
+            }`,
+            synced_cameras: syncedCamerasCount,
+            total_cameras: streams.length,
+            synced_paths: syncedPathsCount,
+            pruned_paths: prunedPathsCount,
             failed_items: failedItems,
         });
     } catch (err: unknown) {
         console.error("POST /api/streaming/sync error:", err);
         return NextResponse.json(
-            { success: false, message: "Terjadi kesalahan saat menyinkronkan data dengan MediaMTX." },
+            { success: false, message: "Terjadi kesalahan sistem saat menyinkronkan data ke MediaMTX." },
             { status: 500 }
         );
     }

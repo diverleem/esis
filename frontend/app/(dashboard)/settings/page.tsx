@@ -325,7 +325,7 @@ export default function SettingsPage() {
         }
     };
 
-    // Sinkronisasi dengan MediaMTX
+    // Sinkronisasi konfigurasi dari Database ke MediaMTX
     const handleSyncMediaMtx = async () => {
         setIsSyncingMtx(true);
 
@@ -334,10 +334,10 @@ export default function SettingsPage() {
             const data = await res.json();
 
             if (res.ok && data.success) {
-                showAlert("success", data.message || "Sinkronisasi MediaMTX berhasil diselesaikan.");
+                showAlert("success", data.message || "Konfigurasi server MediaMTX berhasil disinkronkan dengan data database.");
                 loadStreams();
             } else {
-                const errMsg = data.message || "Gagal menyinkronkan data dengan MediaMTX.";
+                const errMsg = data.message || "Gagal menyinkronkan data kamera ke MediaMTX.";
                 showAlert("error", errMsg);
             }
         } catch {
@@ -697,10 +697,10 @@ export default function SettingsPage() {
                                     onClick={handleSyncMediaMtx}
                                     disabled={isSyncingMtx}
                                     className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1.5 disabled:opacity-60 shadow-2xs"
-                                    title="Tarik seluruh stream yang ada di MediaMTX ke database"
+                                    title="Sinkronkan seluruh data kamera dari database ke server MediaMTX (memulihkan konfigurasi setelah streaming server down/restart)"
                                 >
                                     <RefreshCw className={`w-3.5 h-3.5 ${isSyncingMtx ? "animate-spin" : ""}`} />
-                                    <span>{isSyncingMtx ? "Menyinkronkan..." : "Sinkronkan MediaMTX"}</span>
+                                    <span>{isSyncingMtx ? "Menyinkronkan..." : "Sinkronisasi ke MediaMTX"}</span>
                                 </button>
 
                                 <button
