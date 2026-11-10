@@ -177,19 +177,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </button>
                 </div>
 
-                {/* Status Lingkungan Pengawasan */}
-                {!isMinimized && (
-                    <div className="mx-3 mt-3 px-3 py-2 rounded-lg bg-slate-100 dark:bg-neutral-800/60 border border-slate-200/80 dark:border-neutral-700/60 flex items-center justify-between text-xs">
-                        <div className="flex items-center space-x-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">Sistem Pengawasan</span>
-                        </div>
-                        <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded">
-                            AKTIF
-                        </span>
-                    </div>
-                )}
-
                 {/* Navigasi Menu */}
                 <nav className="flex-1 pt-3 pb-3 px-2 overflow-y-auto overflow-x-hidden">
                     <ul className="space-y-1">

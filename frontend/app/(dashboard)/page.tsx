@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useTheme } from "next-themes";
+import { getGroupBadgeColor } from "@/utils/colors";
 
 // Data tren deteksi mingguan di Pusat Laboratorium Terpadu (PLT)
 const weeklyIncidentData = [
@@ -37,13 +38,12 @@ const zoneDistribution = [
     { zone: "Lantai 6 (Lab Software & Jaringan)", count: 8, percentage: "53%" },
 ];
 
-// 4 Kamera prioritas untuk quick-view di dashboard
-const quickCameras = [
-    { id: 1, name: "Lab Sisdig", zone: "Lantai 5", url: "https://stream.ucim.my.id/ecam_lab_sisdig" },
-    { id: 3, name: "Lab Programming", zone: "Lantai 5", url: "https://stream.ucim.my.id/ecam_lab_programming" },
-    { id: 6, name: "Lab Jaringan", zone: "Lantai 6", url: "https://stream.ucim.my.id/ecam_lab_jaringan" },
-    { id: 7, name: "Lab Multimedia 1", zone: "Lantai 6", url: "https://stream.ucim.my.id/ecam_lab_multimedia1" },
-];
+interface DashboardCam {
+    id: number | string;
+    label: string;
+    location_group: string;
+    url: string;
+}
 
 // Data riwayat pelanggaran terkini untuk tabel pemantauan
 const initialRecentIncidents = [
@@ -95,6 +95,8 @@ export default function DashboardPage() {
     const [currentUser, setCurrentUser] = useState<{ id: string; username: string; role: string; name?: string } | null>(null);
     const [incidents, setIncidents] = useState(initialRecentIncidents);
     const [filterStatus, setFilterStatus] = useState<string>("all");
+    const [totalCameras, setTotalCameras] = useState<number>(0);
+    const [dashboardCameras, setDashboardCameras] = useState<DashboardCam[]>([]);
 
     useEffect(() => {
         setMounted(true);
@@ -103,6 +105,33 @@ export default function DashboardPage() {
             .then((data) => {
                 if (data?.authenticated && data?.user) {
                     setCurrentUser(data.user);
+                }
+            })
+            .catch(() => {});
+
+        // Ambil data streaming kamera aktual dari database
+        fetch("/api/streaming")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (data?.success && Array.isArray(data.streams)) {
+                    setTotalCameras(data.streams.length);
+
+                    // Ambil kamera yang memiliki link streaming / pinggy dari database
+                    const streamsWithPinggy: DashboardCam[] = data.streams
+                        .filter((s: { hls_source?: string; ecam_path?: string }) => Boolean(s.hls_source || s.ecam_path))
+                        .map((s: { id: number | string; label: string; location_group?: string; hls_source?: string; ecam_path?: string }) => {
+                            const pinggyUrl = s.hls_source || `https://fdxuqgcmfo.a.pinggy.link/${s.ecam_path}`;
+                            return {
+                                id: s.id,
+                                label: s.label,
+                                location_group: s.location_group || "Lantai 5 Gedung PLT",
+                                url: pinggyUrl,
+                            };
+                        });
+
+                    // Randomize / acak kamera untuk tampilan Quick Video Wall
+                    const shuffled = [...streamsWithPinggy].sort(() => 0.5 - Math.random());
+                    setDashboardCameras(shuffled.slice(0, 4));
                 }
             })
             .catch(() => {});
@@ -180,10 +209,12 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Kamera Lab Terhubung</p>
-                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">13 / 13</h3>
+                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                                {totalCameras > 0 ? `${totalCameras} / ${totalCameras}` : "19 / 19"}
+                            </h3>
                             <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1 flex items-center space-x-1">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
-                                <span>100% Signal MediaMTX</span>
+                                <span>Kamera Terdaftar</span>
                             </p>
                         </div>
                         <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-neutral-800 text-blue-700 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -237,38 +268,38 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Quick Live CCTV Matrix (Cuplikan 4 Kamera Langsung di Dashboard) */}
+            {/* Quick Video Wall (Cuplikan 4 Kamera Acak dari Database) */}
             <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-5 shadow-2xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
                     <div className="flex items-center space-x-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-pulse"></div>
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
                         <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                            Quick Video Wall — Feed CCTV Laboratorium Prioritas
+                            Quick Video Wall
                         </h3>
                     </div>
                     <Link
                         href="/cctv"
                         className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1"
                     >
-                        <span>Lihat Seluruh 13 Kamera</span>
+                        <span>Lihat Seluruh {totalCameras > 0 ? `${totalCameras} ` : ""}Kamera</span>
                         <ExternalLink className="w-3 h-3" />
                     </Link>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-                    {quickCameras.map((cam) => (
+                    {dashboardCameras.map((cam) => (
                         <div
                             key={cam.id}
-                            className="bg-neutral-950 rounded-lg border border-slate-200 dark:border-neutral-800 overflow-hidden relative group"
+                            className="bg-neutral-950 rounded-lg border border-slate-200 dark:border-neutral-800 overflow-hidden relative group flex flex-col"
                         >
                             {/* Bar atas keterangan kamera */}
-                            <div className="absolute top-0 inset-x-0 bg-gradient-to-b from-black/80 to-transparent p-2.5 z-10 flex items-center justify-between text-white text-[11px] pointer-events-none">
-                                <div className="truncate">
-                                    <p className="font-semibold leading-tight">{cam.name}</p>
-                                    <p className="text-[10px] text-slate-300">{cam.zone}</p>
+                            <div className="bg-neutral-900/95 border-b border-neutral-800 px-3 py-2 flex items-center justify-between text-xs">
+                                <div className="flex items-center space-x-2 truncate">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                                    <p className="font-semibold text-white truncate text-xs">{cam.label}</p>
                                 </div>
-                                <span className="bg-red-600/90 text-white font-bold text-[9px] px-1.5 py-0.2 rounded tracking-wider">
-                                    LIVE
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border shrink-0 ${getGroupBadgeColor(cam.location_group)}`}>
+                                    {cam.location_group}
                                 </span>
                             </div>
 
@@ -277,18 +308,9 @@ export default function DashboardPage() {
                                 <iframe
                                     src={cam.url}
                                     className="w-full h-full border-none"
-                                    title={`Feed ${cam.name}`}
+                                    title={`Feed ${cam.label}`}
                                     allowFullScreen
                                 />
-                            </div>
-
-                            {/* Bar bawah status sinyal */}
-                            <div className="p-2 bg-slate-900 text-[10px] font-mono text-slate-400 flex items-center justify-between border-t border-neutral-800">
-                                <span>CAM_{cam.id.toString().padStart(2, "0")}</span>
-                                <span className="flex items-center space-x-1 text-emerald-400">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                    <span>WebRTC OK</span>
-                                </span>
                             </div>
                         </div>
                     ))}

@@ -28,6 +28,7 @@ import {
     X,
     ShieldAlert
 } from "lucide-react";
+import { getGroupBadgeColor } from "@/utils/colors";
 
 interface UserItem {
     id: string;
@@ -39,19 +40,17 @@ interface UserItem {
 
 export interface StreamItem {
     id: number | string;
-    name: string;
     label: string;
     location_group: string;
     ip_address: string;
     port: number;
     username_rtsp: string;
     password_rtsp: string;
-    ecam_path: string;
-    cam_path: string;
-    ecam_source: string;
-    cam_source: string;
-    protocol: string;
-    is_active: boolean;
+    ecam_path?: string;
+    cam_path?: string;
+    ecam_source?: string;
+    cam_source?: string;
+    hls_source?: string;
     created_at?: string;
     updated_at?: string;
 }
@@ -238,7 +237,7 @@ export default function SettingsPage() {
         setFormData({
             id: undefined,
             label: "",
-            ip_address: "172.20.32.",
+            ip_address: "",
             port: 554,
             username_rtsp: "",
             password_rtsp: "",
@@ -302,7 +301,7 @@ export default function SettingsPage() {
         setDeleteModalError(null);
 
         try {
-            const res = await fetch(`/api/streaming?id=${deleteTarget.id}&name=${encodeURIComponent(deleteTarget.name)}`, {
+            const res = await fetch(`/api/streaming?id=${deleteTarget.id}&label=${encodeURIComponent(deleteTarget.label)}`, {
                 method: "DELETE",
             });
             const data = await res.json();
@@ -433,7 +432,6 @@ export default function SettingsPage() {
         const matchesSearch =
             !streamSearch ||
             item.label.toLowerCase().includes(q) ||
-            item.name.toLowerCase().includes(q) ||
             item.ip_address.toLowerCase().includes(q) ||
             item.location_group.toLowerCase().includes(q);
         return matchesGroup && matchesSearch;
@@ -788,7 +786,6 @@ export default function SettingsPage() {
                                             <th className="py-3 px-4">Alamat IP & Port</th>
                                             <th className="py-3 px-4">Kredensial RTSP</th>
                                             <th className="py-3 px-4">Grouping Lokasi</th>
-                                            <th className="py-3 px-4">Status Stream</th>
                                             <th className="py-3 px-4 text-right">Aksi</th>
                                         </tr>
                                     </thead>
@@ -855,17 +852,9 @@ export default function SettingsPage() {
 
                                                     {/* Grouping Lokasi */}
                                                     <td className="py-3 px-4">
-                                                        <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
+                                                        <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-semibold border ${getGroupBadgeColor(item.location_group)}`}>
                                                             {item.location_group}
                                                         </span>
-                                                    </td>
-
-                                                    {/* Status Stream */}
-                                                    <td className="py-3 px-4">
-                                                        <div className="inline-flex items-center space-x-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-medium">
-                                                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                            <span>Tersambung</span>
-                                                        </div>
                                                     </td>
 
                                                     {/* Tombol Aksi */}
@@ -940,7 +929,7 @@ export default function SettingsPage() {
                             </div>
                         )}
 
-                        <form onSubmit={handleSubmitForm} className="space-y-3.5 text-xs">
+                        <form onSubmit={handleSubmitForm} autoComplete="off" className="space-y-3.5 text-xs">
                             {/* 1. Nama Kamera */}
                             <div className="space-y-1">
                                 <label className="font-semibold text-slate-700 dark:text-slate-300">
@@ -953,6 +942,7 @@ export default function SettingsPage() {
                                     placeholder="Contoh: Lab Sisdig"
                                     required
                                     autoFocus
+                                    autoComplete="off"
                                     className="w-full px-3 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white outline-none focus:border-blue-600"
                                 />
                             </div>
@@ -967,8 +957,9 @@ export default function SettingsPage() {
                                         type="text"
                                         value={formData.ip_address}
                                         onChange={(e) => setFormData({ ...formData, ip_address: e.target.value })}
-                                        placeholder="172.20.32.43"
+                                        placeholder="Contoh: 172.20.32.43"
                                         required
+                                        autoComplete="off"
                                         className="w-full px-3 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white font-mono outline-none focus:border-blue-600"
                                     />
                                 </div>
@@ -982,6 +973,7 @@ export default function SettingsPage() {
                                         value={formData.port}
                                         onChange={(e) => setFormData({ ...formData, port: parseInt(e.target.value, 10) || 554 })}
                                         placeholder="554"
+                                        autoComplete="off"
                                         className="w-full px-3 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white font-mono outline-none focus:border-blue-600"
                                     />
                                 </div>
@@ -995,9 +987,12 @@ export default function SettingsPage() {
                                     </label>
                                     <input
                                         type="text"
+                                        name={`cam_user_field_${modalMode}`}
                                         value={formData.username_rtsp}
                                         onChange={(e) => setFormData({ ...formData, username_rtsp: e.target.value })}
                                         placeholder="Kosongkan jika tanpa auth"
+                                        autoComplete="off"
+                                        spellCheck={false}
                                         className="w-full px-3 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white font-mono outline-none focus:border-blue-600"
                                     />
                                 </div>
@@ -1009,9 +1004,11 @@ export default function SettingsPage() {
                                     <div className="relative">
                                         <input
                                             type={showFormPassword ? "text" : "password"}
+                                            name={`cam_pwd_field_${modalMode}`}
                                             value={formData.password_rtsp}
                                             onChange={(e) => setFormData({ ...formData, password_rtsp: e.target.value })}
                                             placeholder="Kosongkan jika tanpa auth"
+                                            autoComplete="new-password"
                                             className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white font-mono outline-none focus:border-blue-600"
                                         />
                                         <button

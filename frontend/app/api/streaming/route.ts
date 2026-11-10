@@ -156,7 +156,6 @@ export async function GET(request: NextRequest) {
 
                         const streamList = Array.from(cameraMap.values()).map((cam, idx) => ({
                             id: idx + 1,
-                            name: cam.slug,
                             label: cam.label,
                             location_group: cam.location_group,
                             ip_address: cam.ip_address,
@@ -167,8 +166,7 @@ export async function GET(request: NextRequest) {
                             cam_path: cam.cam_path,
                             ecam_source: cam.ecam_source,
                             cam_source: cam.cam_source,
-                            protocol: "WebRTC",
-                            is_active: true,
+                            hls_source: `https://fdxuqgcmfo.a.pinggy.link/${cam.ecam_path}`,
                         }));
 
                         return NextResponse.json({
@@ -189,22 +187,21 @@ export async function GET(request: NextRequest) {
 
         // Jika data dari DB ada, format agar seragam
         const mappedStreams = (streams || []).map((s) => {
-            const slug = slugifyCameraName(s.name || s.label);
+            const slug = slugifyCameraName(s.label);
+            const ecam = s.ecam_path || `ecam_${slug}`;
             return {
                 id: s.id,
-                name: slug,
-                label: s.label || s.name,
-                location_group: s.location_group || s.floor || "Lantai 5 Gedung PLT",
+                label: s.label,
+                location_group: s.location_group || "Lantai 5 Gedung PLT",
                 ip_address: s.ip_address,
                 port: s.port || 554,
                 username_rtsp: s.username_rtsp || "",
                 password_rtsp: s.password_rtsp || "",
-                ecam_path: s.ecam_path || `ecam_${slug}`,
+                ecam_path: ecam,
                 cam_path: s.cam_path || `cam_${slug}`,
                 ecam_source: s.ecam_source || "",
                 cam_source: s.cam_source || "",
-                protocol: s.protocol || "WebRTC",
-                is_active: s.is_active !== undefined ? s.is_active : true,
+                hls_source: s.hls_source || `https://fdxuqgcmfo.a.pinggy.link/${ecam}`,
                 created_at: s.created_at,
                 updated_at: s.updated_at,
             };
@@ -272,21 +269,17 @@ export async function POST(request: NextRequest) {
 
         const supabase = getSupabaseClient();
         const insertPayload = {
-            name: paths.slug,
             label: label.trim(),
             location_group: location_group.trim(),
-            floor: location_group.includes("6") ? "Lt. 6" : "Lt. 5",
             ip_address: ip_address.trim(),
             port: paths.port,
             username_rtsp: username_rtsp ? username_rtsp.trim() : "",
             password_rtsp: password_rtsp ? password_rtsp.trim() : "",
-            channel_path: "/Streaming/Channels/101",
             ecam_path: paths.ecamPath,
             cam_path: paths.camPath,
             ecam_source: paths.ecamSource,
             cam_source: paths.camSource,
-            protocol: "WebRTC",
-            is_active: true,
+            hls_source: `https://fdxuqgcmfo.a.pinggy.link/${paths.ecamPath}`,
         };
 
         const { data: newStream, error: dbError } = await supabase
@@ -345,7 +338,6 @@ export async function PATCH(request: NextRequest) {
             username_rtsp,
             password_rtsp,
             location_group,
-            is_active,
             sync_mediamtx = true,
         } = body;
 
@@ -356,7 +348,7 @@ export async function PATCH(request: NextRequest) {
         const supabase = getSupabaseClient();
         const { data: existing } = await supabase.from("streaming").select("*").eq("id", id).maybeSingle();
 
-        const currentLabel = label || existing?.label || existing?.name || "camera";
+        const currentLabel = label || existing?.label || "camera";
         const currentIp = ip_address || existing?.ip_address || "";
         const currentPort = port !== undefined ? port : (existing?.port || 554);
         const currentUser = username_rtsp !== undefined ? username_rtsp : (existing?.username_rtsp || "");
@@ -381,7 +373,6 @@ export async function PATCH(request: NextRequest) {
         const updatePayload: Record<string, unknown> = {
             label: currentLabel.trim(),
             location_group: currentGroup,
-            floor: currentGroup.includes("6") ? "Lt. 6" : "Lt. 5",
             ip_address: currentIp.trim(),
             port: paths.port,
             username_rtsp: currentUser ? currentUser.trim() : "",
@@ -390,12 +381,9 @@ export async function PATCH(request: NextRequest) {
             cam_path: paths.camPath,
             ecam_source: paths.ecamSource,
             cam_source: paths.camSource,
+            hls_source: `https://fdxuqgcmfo.a.pinggy.link/${paths.ecamPath}`,
             updated_at: new Date().toISOString(),
         };
-
-        if (is_active !== undefined) {
-            updatePayload.is_active = Boolean(is_active);
-        }
 
         const { data: updatedStream, error: dbError } = await supabase
             .from("streaming")
@@ -438,23 +426,23 @@ export async function DELETE(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get("id");
-        const name = searchParams.get("name");
+        const label = searchParams.get("label") || searchParams.get("name");
 
-        if (!id && !name) {
+        if (!id && !label) {
             return NextResponse.json({ success: false, message: "ID atau nama kamera wajib disertakan." }, { status: 400 });
         }
 
         const supabase = getSupabaseClient();
-        let findQuery = supabase.from("streaming").select("id, name, label, ecam_path, cam_path");
+        let findQuery = supabase.from("streaming").select("id, label, ecam_path, cam_path");
         if (id) {
             findQuery = findQuery.eq("id", id);
-        } else if (name) {
-            findQuery = findQuery.eq("name", name);
+        } else if (label) {
+            findQuery = findQuery.eq("label", label);
         }
 
         const { data: targetStream } = await findQuery.maybeSingle();
 
-        const baseSlug = targetStream?.name || slugifyCameraName(name || "");
+        const baseSlug = slugifyCameraName(targetStream?.label || label || "");
         const ecamPath = targetStream?.ecam_path || `ecam_${baseSlug}`;
         const camPath = targetStream?.cam_path || `cam_${baseSlug}`;
 
@@ -465,17 +453,12 @@ export async function DELETE(request: NextRequest) {
         ecamDeleted = await syncSingleMtxPath(ecamPath, "", "delete");
         camDeleted = await syncSingleMtxPath(camPath, "", "delete");
 
-        // Hapus juga jika nama asli dikirim tanpa prefix
-        if (name && name !== ecamPath && name !== camPath) {
-            await syncSingleMtxPath(name, "", "delete");
-        }
-
         // Hapus dari database Supabase
         let deleteQuery = supabase.from("streaming").delete();
         if (id) {
             deleteQuery = deleteQuery.eq("id", id);
-        } else if (name) {
-            deleteQuery = deleteQuery.eq("name", name);
+        } else if (label) {
+            deleteQuery = deleteQuery.eq("label", label);
         }
 
         const { error: dbError } = await deleteQuery;

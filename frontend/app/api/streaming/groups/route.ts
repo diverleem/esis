@@ -168,7 +168,7 @@ export async function DELETE(request: NextRequest) {
         const { count } = await supabase
             .from("streaming")
             .select("id", { count: "exact", head: true })
-            .or(`location_group.eq."${targetGroup.name}",floor.eq."${targetGroup.name}"`);
+            .eq("location_group", targetGroup.name);
 
         if (count && count > 0) {
             return NextResponse.json(

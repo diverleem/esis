@@ -13,3 +13,14 @@ playlist_duration.txt
 supabase_schema
 insert_mahasiswa.sql
 seed_mahasiswa_volunteer.sql
+verify_hls_source.js
+add_hls_source_to_streaming.sql
+
+# AI Server
+AI Server
+AI Server/venv/
+AI Server/snapshots/
+*.pkl
+
+__pycache__/
+*.pyc

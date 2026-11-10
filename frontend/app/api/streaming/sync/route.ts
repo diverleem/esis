@@ -135,10 +135,6 @@ export async function POST(request: NextRequest) {
         const failedItems: string[] = [];
 
         for (const cam of streams) {
-            if (cam.is_active === false) {
-                continue; // Lewati kamera yang dinonaktifkan
-            }
-
             // Dapatkan atau buat path RTSP ganda (ecam & cam)
             let ecamPath = cam.ecam_path;
             let camPath = cam.cam_path;
@@ -146,7 +142,7 @@ export async function POST(request: NextRequest) {
             let camSource = cam.cam_source;
 
             if (!ecamPath || !camPath || !ecamSource || !camSource) {
-                const generated = generateDualRtspPaths(cam.label || cam.name, {
+                const generated = generateDualRtspPaths(cam.label || "kamera", {
                     ip: cam.ip_address,
                     port: cam.port || 554,
                     username: cam.username_rtsp || "",
