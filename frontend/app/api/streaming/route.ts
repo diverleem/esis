@@ -28,18 +28,24 @@ async function syncSingleMtxPath(pathName: string, source: string, action: "add"
         }
 
         if (action === "add" || action === "patch") {
+            const payload = {
+                source,
+                sourceOnDemand: true,
+                sourceOnDemandCloseAfter: "10s",
+            };
+
             // Coba add dulu, jika gagal coba patch, atau sebaliknya
             const addRes = await fetch(`${cleanBase}/v3/config/paths/add/${encodeURIComponent(pathName)}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ source }),
+                body: JSON.stringify(payload),
             });
 
             if (!addRes.ok) {
                 const patchRes = await fetch(`${cleanBase}/v3/config/paths/patch/${encodeURIComponent(pathName)}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ source }),
+                    body: JSON.stringify(payload),
                 });
                 return patchRes.ok;
             }

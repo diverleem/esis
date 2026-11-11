@@ -19,11 +19,17 @@ function getSupabaseClient() {
 // Helper untuk menambah atau memperbarui (patch) path di MediaMTX Control API
 async function syncPathToMtx(pathName: string, source: string, baseUrl: string): Promise<boolean> {
     try {
+        const payload = {
+            source,
+            sourceOnDemand: true,
+            sourceOnDemandCloseAfter: "10s",
+        };
+
         // Coba tambah path baru via POST
         const addRes = await fetch(`${baseUrl}/v3/config/paths/add/${encodeURIComponent(pathName)}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ source }),
+            body: JSON.stringify(payload),
         });
 
         if (addRes.ok) {
@@ -34,7 +40,7 @@ async function syncPathToMtx(pathName: string, source: string, baseUrl: string):
         const patchRes = await fetch(`${baseUrl}/v3/config/paths/patch/${encodeURIComponent(pathName)}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ source }),
+            body: JSON.stringify(payload),
         });
 
         return patchRes.ok;
