@@ -208,10 +208,49 @@ export default function CCTVPage() {
         let isMounted = true;
         const fetchTelemetry = async () => {
             try {
+                // 1. Coba ambil dari Next.js Web API
                 const res = await fetch("/api/ai/live-feed", { cache: "no-store" });
                 if (res.ok && isMounted) {
                     const data = await res.json();
-                    setTelemetry(data);
+                    if (data.online) {
+                        setTelemetry(data);
+                        return;
+                    }
+                }
+
+                // 2. Fallback Langsung: Hubungi AI Server Lokal di http://localhost:8001/telemetry
+                try {
+                    const localController = new AbortController();
+                    const localTimeout = setTimeout(() => localController.abort(), 1200);
+                    const localRes = await fetch("http://localhost:8001/telemetry", {
+                        cache: "no-store",
+                        signal: localController.signal,
+                    });
+                    clearTimeout(localTimeout);
+
+                    if (localRes.ok && isMounted) {
+                        const localData = await localRes.json();
+                        setTelemetry({
+                            online: true,
+                            current_lab: localData.current_lab || "Lab Sistem Digital",
+                            cam_key: localData.cam_key || "lab_sisdig",
+                            ecam_path: localData.ecam_path || "ecam_lab_sisdig",
+                            is_smoking: Boolean(localData.is_smoking),
+                            smoking_duration: localData.smoking_duration || 0,
+                            boxes: localData.boxes || [],
+                            fps: localData.fps || 0,
+                            has_person: Boolean(localData.has_person),
+                            auto_skip_countdown: localData.auto_skip_countdown || 10,
+                            status: localData.status || "online",
+                        });
+                        return;
+                    }
+                } catch {
+                    // Port 8001 tidak dapat dihubungi
+                }
+
+                if (isMounted) {
+                    setTelemetry((prev) => ({ ...prev, online: false }));
                 }
             } catch {
                 if (isMounted) {
@@ -221,7 +260,7 @@ export default function CCTVPage() {
         };
 
         fetchTelemetry();
-        const interval = setInterval(fetchTelemetry, 400);
+        const interval = setInterval(fetchTelemetry, 500);
         return () => {
             isMounted = false;
             clearInterval(interval);

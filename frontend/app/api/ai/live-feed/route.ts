@@ -64,8 +64,8 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
     const now = Date.now();
-    // Anggap offline jika dalam 4 detik tidak ada sinyal dari AI Server Laptop
-    const isOnline = latestTelemetry !== null && (now - lastUpdateTimestamp) < 4000;
+    // Anggap offline jika dalam 8 detik tidak ada sinyal dari AI Server Laptop
+    const isOnline = latestTelemetry !== null && (now - lastUpdateTimestamp) < 8000;
 
     if (!isOnline || !latestTelemetry) {
         return NextResponse.json({
