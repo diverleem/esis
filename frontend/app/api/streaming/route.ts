@@ -308,7 +308,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            message: `Kamera "${label.trim()}" berhasil ditambahkan! 2 path MediaMTX (${paths.ecamPath} [Mode Hemat 102] & ${paths.camPath} [Mode HD 101]) telah dibuat.`,
+            message: `Kamera "${label.trim()}" berhasil ditambahkan! Kedua stream (${paths.ecamPath} [Substream] & ${paths.camPath} [Mainstream AI]) telah tersimpan di database.`,
             stream: newStream,
             paths,
             mediamtx_synced: ecamSynced && camSynced,

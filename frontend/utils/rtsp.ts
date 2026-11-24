@@ -34,8 +34,8 @@ export function slugifyCameraName(name: string): string {
 
 /**
  * Membangun URL RTSP dan 2 path MediaMTX otomatis:
- * 1. ecam_<slug> dengan channel 102 (Mode Hemat / Substream - default)
- * 2. cam_<slug> dengan channel 101 (Mode HD / Mainstream)
+ * 1. ecam_<slug> dengan channel 102 (Substream - untuk web streaming CCTV)
+ * 2. cam_<slug> dengan channel 101 (Mainstream - khusus untuk inferensi model AI)
  */
 export function generateDualRtspPaths(name: string, params: RtspConfigParams): GeneratedRtspPaths {
     const slug = slugifyCameraName(name) || "camera";

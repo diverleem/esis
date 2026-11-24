@@ -1,32 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { 
-    Shield, 
-    Video, 
-    UserPlus, 
-    Users, 
-    Save, 
-    CheckCircle2, 
-    AlertCircle, 
-    Loader2, 
+import {
+    Shield,
+    Video,
+    UserPlus,
+    Users,
+    Save,
+    CheckCircle2,
+    AlertCircle,
+    Loader2,
     Plus,
     Trash2,
     Edit3,
     RefreshCw,
     Eye,
     EyeOff,
-    ExternalLink,
-    Copy,
-    Check,
     Search,
     Database,
     Radio,
-    FolderPlus,
     Tag,
     X,
-    ShieldAlert
+    ShieldAlert,
 } from "lucide-react";
 import { getGroupBadgeColor } from "@/utils/colors";
 
@@ -61,18 +58,19 @@ interface GroupItem {
 }
 
 export default function SettingsPage() {
+    const router = useRouter();
+
     // Current user session & role
     const [currentUser, setCurrentUser] = useState<{ id: string; username: string; role: string; name?: string } | null>(null);
     const [activeTab, setActiveTab] = useState<"cctv_crud" | "users" | "ai">("cctv_crud");
 
     // State CCTV Streaming CRUD
     const [streams, setStreams] = useState<StreamItem[]>([]);
-    const [loadingStreams, setLoadingStreams] = useState(false);
+    const [loadingStreams, setLoadingStreams] = useState(true);
     const [dbTableMissing, setDbTableMissing] = useState(false);
     const [streamSearch, setStreamSearch] = useState("");
     const [selectedGroupFilter, setSelectedGroupFilter] = useState<string>("all");
     const [revealedPasswords, setRevealedPasswords] = useState<Record<string | number, boolean>>({});
-    const [copiedIndex, setCopiedIndex] = useState<string | number | null>(null);
     const [isSyncingMtx, setIsSyncingMtx] = useState(false);
 
     // Universal Floating Alert/Toast State (z-[100] selalu di atas semua modal)
@@ -165,14 +163,14 @@ export default function SettingsPage() {
                     if (data.user.role === "superadmin") {
                         setActiveTab("cctv_crud");
                     } else {
-                        window.location.href = "/";
+                        router.replace("/");
                     }
                 } else {
-                    window.location.href = "/login";
+                    router.replace("/login");
                 }
             })
             .catch(() => {});
-    }, []);
+    }, [router]);
 
     // 2. Load Groups Lokasi
     const loadGroups = async () => {
@@ -222,16 +220,48 @@ export default function SettingsPage() {
         }
     };
 
+    // 5. Initial Load: Groups & Streams saat komponen pertama kali dimuat
     useEffect(() => {
-        loadGroups();
-        if (activeTab === "cctv_crud") {
+        let isMounted = true;
+
+        fetch("/api/streaming/groups")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (isMounted && data?.success && Array.isArray(data.groups)) {
+                    setGroups(data.groups);
+                }
+            })
+            .catch(() => {});
+
+        fetch("/api/streaming")
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (isMounted && data?.success && Array.isArray(data.streams)) {
+                    setStreams(data.streams);
+                    setDbTableMissing(Boolean(data.db_table_missing));
+                }
+            })
+            .catch(() => {})
+            .finally(() => {
+                if (isMounted) {
+                    setLoadingStreams(false);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    // 6. Handler Pergantian Tab
+    const handleTabChange = (tab: "cctv_crud" | "users" | "ai") => {
+        setActiveTab(tab);
+        if (tab === "cctv_crud") {
             loadStreams();
-        } else if (activeTab === "users") {
+        } else if (tab === "users") {
             loadUsers();
         }
-    }, [activeTab]);
-
-    // Buka Modal Tambah
+    };
     const handleOpenAdd = () => {
         setModalMode("add");
         setFormData({
@@ -413,13 +443,6 @@ export default function SettingsPage() {
         }
     };
 
-    // Salin string RTSP atau nama path
-    const handleCopyText = (text: string, id: string | number) => {
-        navigator.clipboard.writeText(text);
-        setCopiedIndex(id);
-        setTimeout(() => setCopiedIndex(null), 2000);
-    };
-
     // Toggle reveal password
     const toggleRevealPassword = (id: string | number) => {
         setRevealedPasswords((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -487,9 +510,12 @@ export default function SettingsPage() {
         setUserMessage(null);
 
         try {
-            const res = await fetch(`/api/users?id=${encodeURIComponent(user.id)}&username=${encodeURIComponent(user.username)}`, {
-                method: "DELETE",
-            });
+            const res = await fetch(
+                `/api/users?id=${encodeURIComponent(user.id)}&username=${encodeURIComponent(user.username)}`,
+                {
+                    method: "DELETE",
+                },
+            );
             const data = await res.json();
 
             if (res.ok && data.success) {
@@ -516,14 +542,9 @@ export default function SettingsPage() {
             <div className="py-20 text-center space-y-3">
                 <ShieldAlert className="w-12 h-12 text-rose-600 mx-auto" />
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">Akses Terbatas</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                    Halaman pengaturan hanya dapat diakses oleh Superadmin.
-                </p>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">Halaman pengaturan hanya dapat diakses oleh Superadmin.</p>
                 <div className="pt-2">
-                    <Link
-                        href="/"
-                        className="px-4 py-2 bg-blue-700 text-white rounded-lg text-xs font-semibold inline-block"
-                    >
+                    <Link href="/" className="px-4 py-2 bg-blue-700 text-white rounded-lg text-xs font-semibold inline-block">
                         Kembali ke Dasbor
                     </Link>
                 </div>
@@ -541,18 +562,20 @@ export default function SettingsPage() {
                             alertToast.type === "success"
                                 ? "bg-white/95 dark:bg-neutral-900/95 border-emerald-500 text-slate-900 dark:text-white"
                                 : alertToast.type === "error"
-                                ? "bg-white/95 dark:bg-neutral-900/95 border-rose-500 text-slate-900 dark:text-white"
-                                : "bg-white/95 dark:bg-neutral-900/95 border-blue-500 text-slate-900 dark:text-white"
+                                  ? "bg-white/95 dark:bg-neutral-900/95 border-rose-500 text-slate-900 dark:text-white"
+                                  : "bg-white/95 dark:bg-neutral-900/95 border-blue-500 text-slate-900 dark:text-white"
                         }`}
                     >
                         <div className="flex items-start space-x-3">
-                            <div className={`p-2 rounded-lg shrink-0 ${
-                                alertToast.type === "success"
-                                    ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400"
-                                    : alertToast.type === "error"
-                                    ? "bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400"
-                                    : "bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400"
-                            }`}>
+                            <div
+                                className={`p-2 rounded-lg shrink-0 ${
+                                    alertToast.type === "success"
+                                        ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400"
+                                        : alertToast.type === "error"
+                                          ? "bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400"
+                                          : "bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400"
+                                }`}
+                            >
                                 {alertToast.type === "success" ? (
                                     <CheckCircle2 className="w-5 h-5" />
                                 ) : alertToast.type === "error" ? (
@@ -562,13 +585,15 @@ export default function SettingsPage() {
                                 )}
                             </div>
                             <div className="space-y-0.5">
-                                <h4 className={`text-xs font-bold leading-tight ${
-                                    alertToast.type === "success"
-                                        ? "text-emerald-700 dark:text-emerald-400"
-                                        : alertToast.type === "error"
-                                        ? "text-rose-700 dark:text-rose-400"
-                                        : "text-blue-700 dark:text-blue-400"
-                                }`}>
+                                <h4
+                                    className={`text-xs font-bold leading-tight ${
+                                        alertToast.type === "success"
+                                            ? "text-emerald-700 dark:text-emerald-400"
+                                            : alertToast.type === "error"
+                                              ? "text-rose-700 dark:text-rose-400"
+                                              : "text-blue-700 dark:text-blue-400"
+                                    }`}
+                                >
                                     {alertToast.title}
                                 </h4>
                                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
@@ -593,13 +618,9 @@ export default function SettingsPage() {
                 <div>
                     <div className="flex items-center space-x-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                            Konfigurasi Sistem E.S.I.S
-                        </span>
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Konfigurasi Sistem E.S.I.S</span>
                     </div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-1">
-                        Pengaturan & Parameter Operasional
-                    </h2>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-1">Pengaturan & Parameter Operasional</h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         Kelola parameter MediaMTX, feed CCTV RTSP otomatis, grouping lokasi, dan akun hak akses laboran.
                     </p>
@@ -609,7 +630,7 @@ export default function SettingsPage() {
                 <div className="flex flex-wrap border-b border-slate-200 dark:border-neutral-800 mt-5 gap-y-2 space-x-4 text-xs font-semibold">
                     <button
                         type="button"
-                        onClick={() => setActiveTab("cctv_crud")}
+                        onClick={() => handleTabChange("cctv_crud")}
                         className={`pb-3 flex items-center space-x-1.5 transition-colors border-b-2 -mb-[1px] ${
                             activeTab === "cctv_crud"
                                 ? "border-blue-700 text-blue-700 dark:text-blue-400 dark:border-blue-400"
@@ -622,7 +643,7 @@ export default function SettingsPage() {
 
                     <button
                         type="button"
-                        onClick={() => setActiveTab("users")}
+                        onClick={() => handleTabChange("users")}
                         className={`pb-3 flex items-center space-x-1.5 transition-colors border-b-2 -mb-[1px] ${
                             activeTab === "users"
                                 ? "border-blue-700 text-blue-700 dark:text-blue-400 dark:border-blue-400"
@@ -635,7 +656,7 @@ export default function SettingsPage() {
 
                     <button
                         type="button"
-                        onClick={() => setActiveTab("ai")}
+                        onClick={() => handleTabChange("ai")}
                         className={`pb-3 flex items-center space-x-1.5 transition-colors border-b-2 -mb-[1px] ${
                             activeTab === "ai"
                                 ? "border-blue-700 text-blue-700 dark:text-blue-400 dark:border-blue-400"
@@ -659,7 +680,9 @@ export default function SettingsPage() {
                                 <span>Tabel Database `streaming` Belum Dibuat di Supabase</span>
                             </div>
                             <p className="text-amber-800 dark:text-amber-300 leading-relaxed">
-                                Sistem membaca konfigurasi langsung dari MediaMTX Control API (`config.ucim.my.id`). Untuk mengaktifkan penyimpanan permanen ke Supabase, silakan jalankan query SQL dari berkas <code className="font-mono font-bold">streaming_schema.sql</code> di SQL Editor Supabase.
+                                Sistem membaca konfigurasi langsung dari MediaMTX Control API (`config.ucim.my.id`). Untuk
+                                mengaktifkan penyimpanan permanen ke Supabase, silakan jalankan query SQL dari berkas{" "}
+                                <code className="font-mono font-bold">streaming_schema.sql</code> di SQL Editor Supabase.
                             </p>
                         </div>
                     )}
@@ -771,7 +794,9 @@ export default function SettingsPage() {
                             <div className="py-16 text-center text-slate-400 text-xs space-y-2">
                                 <Video className="w-8 h-8 mx-auto text-slate-300 dark:text-neutral-700" />
                                 <p className="font-semibold text-slate-600 dark:text-slate-300">
-                                    {streamSearch ? "Tidak ada kamera yang cocok dengan kata kunci pencarian." : "Belum ada kamera CCTV yang terdaftar."}
+                                    {streamSearch
+                                        ? "Tidak ada kamera yang cocok dengan kata kunci pencarian."
+                                        : "Belum ada kamera CCTV yang terdaftar."}
                                 </p>
                                 <p className="text-[11px] text-slate-400">
                                     Klik tombol <span className="font-bold">Tambah Kamera Baru</span> untuk menambah kamera.
@@ -833,7 +858,11 @@ export default function SettingsPage() {
                                                                         type="button"
                                                                         onClick={() => toggleRevealPassword(item.id)}
                                                                         className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
-                                                                        aria-label={isPassRevealed ? "Sembunyikan password" : "Lihat password"}
+                                                                        aria-label={
+                                                                            isPassRevealed
+                                                                                ? "Sembunyikan password"
+                                                                                : "Lihat password"
+                                                                        }
                                                                     >
                                                                         {isPassRevealed ? (
                                                                             <EyeOff className="w-3 h-3" />
@@ -852,7 +881,9 @@ export default function SettingsPage() {
 
                                                     {/* Grouping Lokasi */}
                                                     <td className="py-3 px-4">
-                                                        <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-semibold border ${getGroupBadgeColor(item.location_group)}`}>
+                                                        <span
+                                                            className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-semibold border ${getGroupBadgeColor(item.location_group)}`}
+                                                        >
                                                             {item.location_group}
                                                         </span>
                                                     </td>
@@ -939,7 +970,6 @@ export default function SettingsPage() {
                                     type="text"
                                     value={formData.label}
                                     onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                                    placeholder="Contoh: Lab Sisdig"
                                     required
                                     autoFocus
                                     autoComplete="off"
@@ -957,7 +987,7 @@ export default function SettingsPage() {
                                         type="text"
                                         value={formData.ip_address}
                                         onChange={(e) => setFormData({ ...formData, ip_address: e.target.value })}
-                                        placeholder="Contoh: 172.20.32.43"
+                                        placeholder="127.0.0.27"
                                         required
                                         autoComplete="off"
                                         className="w-full px-3 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white font-mono outline-none focus:border-blue-600"
@@ -990,7 +1020,6 @@ export default function SettingsPage() {
                                         name={`cam_user_field_${modalMode}`}
                                         value={formData.username_rtsp}
                                         onChange={(e) => setFormData({ ...formData, username_rtsp: e.target.value })}
-                                        placeholder="Kosongkan jika tanpa auth"
                                         autoComplete="off"
                                         spellCheck={false}
                                         className="w-full px-3 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white font-mono outline-none focus:border-blue-600"
@@ -1007,7 +1036,6 @@ export default function SettingsPage() {
                                             name={`cam_pwd_field_${modalMode}`}
                                             value={formData.password_rtsp}
                                             onChange={(e) => setFormData({ ...formData, password_rtsp: e.target.value })}
-                                            placeholder="Kosongkan jika tanpa auth"
                                             autoComplete="new-password"
                                             className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white font-mono outline-none focus:border-blue-600"
                                         />
@@ -1016,7 +1044,11 @@ export default function SettingsPage() {
                                             onClick={() => setShowFormPassword(!showFormPassword)}
                                             className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                                         >
-                                            {showFormPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                            {showFormPassword ? (
+                                                <EyeOff className="w-3.5 h-3.5" />
+                                            ) : (
+                                                <Eye className="w-3.5 h-3.5" />
+                                            )}
                                         </button>
                                     </div>
                                 </div>
@@ -1025,9 +1057,7 @@ export default function SettingsPage() {
                             {/* 4. Grouping Lokasi */}
                             <div className="space-y-1">
                                 <div className="flex items-center justify-between">
-                                    <label className="font-semibold text-slate-700 dark:text-slate-300">
-                                        Grouping Lokasi
-                                    </label>
+                                    <label className="font-semibold text-slate-700 dark:text-slate-300">Lokasi</label>
                                     <button
                                         type="button"
                                         onClick={() => setIsGroupModalOpen(true)}
@@ -1050,12 +1080,6 @@ export default function SettingsPage() {
                                 </select>
                             </div>
 
-                            {/* Keterangan Otomasi Gateway */}
-                            <div className="p-3 bg-slate-50 dark:bg-neutral-800/80 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-2">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                <span>Kamera akan otomatis tersambung ke gateway streaming untuk pemantauan realtime.</span>
-                            </div>
-
                             {/* Tombol Aksi Modal */}
                             <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100 dark:border-neutral-800">
                                 <button
@@ -1073,12 +1097,14 @@ export default function SettingsPage() {
                                     {formSubmitting ? (
                                         <>
                                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                            <span>Menyimpan ke MediaMTX...</span>
+                                            <span>Menyimpan ...</span>
                                         </>
                                     ) : (
                                         <>
                                             <Save className="w-3.5 h-3.5" />
-                                            <span>{modalMode === "add" ? "Simpan Kamera & Buat 2 Path" : "Perbarui Kamera"}</span>
+                                            <span>
+                                                {modalMode === "add" ? "Simpan Streaming Kamera" : "Perbarui Streaming Kamera"}
+                                            </span>
                                         </>
                                     )}
                                 </button>
@@ -1095,9 +1121,7 @@ export default function SettingsPage() {
                         <div className="flex items-center justify-between border-b border-slate-100 dark:border-neutral-800 pb-3">
                             <div className="flex items-center space-x-2">
                                 <Tag className="w-4 h-4 text-blue-600" />
-                                <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                                    Kelola Grouping Lokasi CCTV
-                                </h3>
+                                <h3 className="font-bold text-slate-900 dark:text-white text-sm">Kelola Grouping Lokasi CCTV</h3>
                             </div>
                             <button
                                 type="button"
@@ -1178,13 +1202,9 @@ export default function SettingsPage() {
                                         >
                                             <div className="flex items-center space-x-2">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                                                <span className="font-semibold text-slate-900 dark:text-white">
-                                                    {grp.name}
-                                                </span>
+                                                <span className="font-semibold text-slate-900 dark:text-white">{grp.name}</span>
                                                 {isDefault && (
-                                                    <span className="text-[10px] text-slate-400 font-mono">
-                                                        (Default)
-                                                    </span>
+                                                    <span className="text-[10px] text-slate-400 font-mono">(Default)</span>
                                                 )}
                                             </div>
 
@@ -1232,7 +1252,10 @@ export default function SettingsPage() {
                         </div>
 
                         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                            Kamera <span className="font-bold text-slate-900 dark:text-white">{deleteTarget.label}</span> akan dihapus dari basis data dan kedua path di MediaMTX Control API (<code className="font-mono text-rose-600">{deleteTarget.ecam_path}</code> & <code className="font-mono text-rose-600">{deleteTarget.cam_path}</code>) akan ditiadakan.
+                            Kamera <span className="font-bold text-slate-900 dark:text-white">{deleteTarget.label}</span> akan
+                            dihapus dari basis data dan kedua path di MediaMTX Control API (
+                            <code className="font-mono text-rose-600">{deleteTarget.ecam_path}</code> &{" "}
+                            <code className="font-mono text-rose-600">{deleteTarget.cam_path}</code>) akan ditiadakan.
                         </p>
 
                         {deleteModalError && (
@@ -1284,8 +1307,6 @@ export default function SettingsPage() {
                     </div>
                 </div>
             )}
-
-
 
             {/* TAB 3: PARAMETER DETEKSI AI */}
             {activeTab === "ai" && (
@@ -1344,7 +1365,9 @@ export default function SettingsPage() {
                                 <input
                                     type="number"
                                     value={aiConfig.duplicateSuppressionSeconds}
-                                    onChange={(e) => setAiConfig({ ...aiConfig, duplicateSuppressionSeconds: parseInt(e.target.value) })}
+                                    onChange={(e) =>
+                                        setAiConfig({ ...aiConfig, duplicateSuppressionSeconds: parseInt(e.target.value) })
+                                    }
                                     className="w-full px-3 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-800 dark:text-slate-200 outline-none focus:border-blue-600"
                                 />
                             </div>
@@ -1370,20 +1393,20 @@ export default function SettingsPage() {
                     <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-5 shadow-2xs">
                         <div className="flex items-center space-x-2 mb-1">
                             <UserPlus className="w-4 h-4 text-blue-600" />
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                                Tambah Akun Petugas
-                            </h3>
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Tambah Akun Petugas</h3>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
                             Hanya Superadmin yang memiliki wewenang membuat akun operator laboran atau security.
                         </p>
 
                         {userMessage && (
-                            <div className={`mb-4 p-3 rounded-lg border text-xs flex items-center space-x-2 ${
-                                userMessage.type === "success"
-                                    ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
-                                    : "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300"
-                            }`}>
+                            <div
+                                className={`mb-4 p-3 rounded-lg border text-xs flex items-center space-x-2 ${
+                                    userMessage.type === "success"
+                                        ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
+                                        : "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300"
+                                }`}
+                            >
                                 {userMessage.type === "success" ? (
                                     <CheckCircle2 className="w-4 h-4 shrink-0" />
                                 ) : (
@@ -1395,9 +1418,7 @@ export default function SettingsPage() {
 
                         <form onSubmit={handleCreateUser} className="space-y-3 text-xs">
                             <div className="space-y-1">
-                                <label className="font-semibold text-slate-700 dark:text-slate-300">
-                                    Nama Lengkap
-                                </label>
+                                <label className="font-semibold text-slate-700 dark:text-slate-300">Nama Lengkap</label>
                                 <input
                                     type="text"
                                     value={userForm.name}
@@ -1408,9 +1429,7 @@ export default function SettingsPage() {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="font-semibold text-slate-700 dark:text-slate-300">
-                                    Username Akun
-                                </label>
+                                <label className="font-semibold text-slate-700 dark:text-slate-300">Username Akun</label>
                                 <input
                                     type="text"
                                     value={userForm.username}
@@ -1422,9 +1441,7 @@ export default function SettingsPage() {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="font-semibold text-slate-700 dark:text-slate-300">
-                                    Kata Sandi Akun
-                                </label>
+                                <label className="font-semibold text-slate-700 dark:text-slate-300">Kata Sandi Akun</label>
                                 <input
                                     type="password"
                                     value={userForm.password}
@@ -1436,9 +1453,7 @@ export default function SettingsPage() {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="font-semibold text-slate-700 dark:text-slate-300">
-                                    Peran (Role)
-                                </label>
+                                <label className="font-semibold text-slate-700 dark:text-slate-300">Peran (Role)</label>
                                 <select
                                     value={userForm.role}
                                     onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
@@ -1473,9 +1488,7 @@ export default function SettingsPage() {
                     <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-5 shadow-2xs">
                         <div className="flex items-center justify-between mb-4">
                             <div>
-                                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                                    Daftar Pengguna Sistem
-                                </h3>
+                                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Daftar Pengguna Sistem</h3>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">
                                     Akun dengan izin akses ke dashboard E.S.I.S
                                 </p>
@@ -1501,7 +1514,7 @@ export default function SettingsPage() {
                         ) : (
                             <div className="space-y-2.5 max-h-96 overflow-y-auto">
                                 {users.map((u) => (
-                                    <div 
+                                    <div
                                         key={u.id}
                                         className="p-3 bg-slate-50 dark:bg-neutral-800/60 border border-slate-200/60 dark:border-neutral-700/60 rounded-lg flex items-center justify-between text-xs"
                                     >
@@ -1510,13 +1523,15 @@ export default function SettingsPage() {
                                             <p className="text-[11px] font-mono text-slate-400">@{u.username}</p>
                                         </div>
                                         <div className="flex items-center space-x-2">
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
-                                                u.role === "superadmin"
-                                                    ? "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300"
-                                                    : u.role === "admin"
-                                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
-                                                    : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                                            }`}>
+                                            <span
+                                                className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                                                    u.role === "superadmin"
+                                                        ? "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300"
+                                                        : u.role === "admin"
+                                                          ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                                                          : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                                }`}
+                                            >
                                                 {u.role}
                                             </span>
                                             {/* Tombol Hapus Pengguna */}

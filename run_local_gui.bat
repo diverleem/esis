@@ -16,11 +16,16 @@ echo   [4] Lab Programming (H.264)
 echo.
 echo  Alur Model Berjenjang:
 echo   - Deteksi Manusia (YOLOv8n)
-echo   - Deteksi Merokok vs Pulpen (Model Rokok)
+echo   - Deteksi Merokok (Model_Rokok_Esis_New_Era_Grey_v3.pt)
 echo   - Capture & Face Recognition Mahasiswa (YuNet + FaceNet)
 echo.
 echo  Aturan:
 echo   - 60 Detik per lab (atau skip setelah 10 detik jika tidak ada orang)
+echo   - Verifikasi Merokok: Wajib terdeteksi minimal 3 detik kontinu
+echo.
+echo  Kontrol Display:
+echo   - [M] Beralih antara CCTV RTSP dan Mock Webcam Laptop
+echo   - [N] / [P] Pindah Lab ^| [S] Kunci Kamera ^| [C] Ganti Resolusi 101/102
 echo.
 echo ===============================================================================
 echo.

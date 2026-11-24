@@ -179,7 +179,6 @@ export default function CCTVPage() {
     const [viewMode, setViewMode] = useState<"grid" | "single">("grid");
     const [selectedCamId, setSelectedCamId] = useState<number | string>(1);
     const [selectedGroup, setSelectedGroup] = useState<string>("all");
-    const [isHDMode, setIsHDMode] = useState<boolean>(false);
     const [streamReloadKey, setStreamReloadKey] = useState<number>(0);
     const [expandedCamera, setExpandedCamera] = useState<number | string | null>(null);
 
@@ -322,23 +321,14 @@ export default function CCTVPage() {
                             </button>
                         </div>
 
-                        {/* Mode Kualitas Toggle */}
-                        <label 
-                            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs cursor-pointer border select-none transition-all ${
-                                isHDMode 
-                                    ? "bg-blue-50 dark:bg-blue-950/60 border-blue-400 text-blue-700 dark:text-blue-300 font-bold"
-                                    : "bg-slate-100 dark:bg-neutral-800 border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-slate-300"
-                            }`}
-                            title="Alihkan Kualitas HD atau Standar"
+                        {/* Status Otomatis Substream */}
+                        <div 
+                            className="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs border bg-slate-100 dark:bg-neutral-800 border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-slate-300 select-none font-medium"
+                            title="Streaming CCTV otomatis menggunakan Substream (ecam) hemat bandwidth; Mainstream dialokasikan untuk inferensi AI"
                         >
-                            <input
-                                type="checkbox"
-                                checked={isHDMode}
-                                onChange={(e) => setIsHDMode(e.target.checked)}
-                                className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
-                            />
-                            <span>{isHDMode ? "Kualitas HD" : "Kualitas Standar"}</span>
-                        </label>
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Substream (ecam)</span>
+                        </div>
 
                         {/* Tombol Muat Ulang Stream */}
                         <button
@@ -423,12 +413,11 @@ export default function CCTVPage() {
                 }
             >
                 {(viewMode === "grid" ? filteredCameras : [activeCamera]).map((cam) => {
-                    const activePath = isHDMode ? cam.cam_path : cam.ecam_path;
-                    const streamUrl = `https://stream.ucim.my.id/${activePath}`;
+                    const streamUrl = `https://stream.ucim.my.id/${cam.ecam_path}`;
 
                     return (
                         <div
-                            key={`${cam.id}-${streamReloadKey}-${isHDMode ? "hd" : "ecam"}`}
+                            key={`${cam.id}-${streamReloadKey}`}
                             className="bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-xl overflow-hidden shadow-xs relative flex flex-col group"
                         >
                             {/* Header Atas Feed Video */}
@@ -466,23 +455,6 @@ export default function CCTVPage() {
                         </div>
                     );
                 })}
-            </div>
-
-            {/* Petunjuk Operasional Laboratorium */}
-            <div className="p-4 rounded-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 text-xs text-slate-600 dark:text-slate-400 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-                <div className="flex items-center space-x-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-neutral-800 text-blue-700 dark:text-blue-400 flex items-center justify-center shrink-0">
-                        <Building2 className="w-4 h-4" />
-                    </div>
-                    <div>
-                        <p className="font-semibold text-slate-800 dark:text-slate-200">
-                            Pusat Laboratorium Terpadu: Infrastruktur Jaringan Lokal
-                        </p>
-                        <p className="text-[11px] text-slate-500">
-                            CCTV terhubung ke LAN switch khusus di Gedung PLT untuk pemantauan disiplin dan kawasan KTR.
-                        </p>
-                    </div>
-                </div>
             </div>
         </div>
     );
