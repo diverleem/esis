@@ -1,36 +1,26 @@
 @echo off
 chcp 65001 > nul
-title E.S.I.S 4-Lab Local Patrol GUI (GeForce MX550)
+title E.S.I.S Plan B: Local Laptop Patrol Monitor (GeForce MX550)
 cls
 
 echo ===============================================================================
 echo   E.S.I.S (Electronic Smoking Identification System)
-echo   Local Verification Monitor - KHUSUS 4 LAB (Tanpa Web / Pure GUI)
+echo   PLAN B: Local Laptop Patrol Monitor (Display GUI + Web Live Telemetry)
 echo ===============================================================================
 echo.
-echo  Daftar 4 Lab Target:
-echo   [1] Lab Riset Lantai 5 (H.265)
-echo   [2] Lab Sistem Digital (H.264)
-echo   [3] Lab OS (H.264)
-echo   [4] Lab Programming (H.264)
+echo  Target 4 Kamera Lab Switch PLT:
+echo   - Lab Riset Lantai 5 (H.265)
+echo   - Lab Sistem Digital (H.264)
+echo   - Lab OS (H.264)
+echo   - Lab Programming (H.264)
 echo.
-echo  Alur Model Berjenjang:
-echo   - Deteksi Manusia (YOLOv8n)
-echo   - Deteksi Merokok (Model_Rokok_Esis_New_Era_Grey_v3.pt)
-echo   - Capture & Face Recognition Mahasiswa (YuNet + FaceNet)
-echo.
-echo  Aturan:
-echo   - 60 Detik per lab (atau skip setelah 10 detik jika tidak ada orang)
-echo   - Verifikasi Merokok: Wajib terdeteksi minimal 3 detik kontinu
-echo.
-echo  Kontrol Display:
-echo   - [M] Beralih antara CCTV RTSP dan Mock Webcam Laptop
-echo   - [N] / [P] Pindah Lab ^| [S] Kunci Kamera ^| [C] Ganti Resolusi 101/102
-echo.
+echo  Skema: 10 Detik Human Detection -> Auto-Skip jika nihil -> Rokok & Face jika ada.
+echo  API Server aktif di http://localhost:8001/
+echo  Telemetri otomatis dikirim ke Web Next.js (/api/ai/live-feed)
 echo ===============================================================================
 echo.
 
-cd /d "%~dp0AI Server\aimodelsv1"
-python main_patrol_gui.py --interval 60 --skip-sec 10 --channel 102 %*
+cd /d "%~dp0AI Server\Plan_B_Local_Laptop"
+python main_local_gui.py --interval 60 --skip-sec 10 --channel 102 --api-port 8001 %*
 
 pause
