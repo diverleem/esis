@@ -7,7 +7,6 @@ import {
     RotateCcw,
     Maximize2,
     Flame,
-    AlertCircle,
     ExternalLink,
     Check,
     RefreshCw
@@ -175,74 +174,123 @@ export default function CCTVPage() {
     const [selectedGroup, setSelectedGroup] = useState<string>("all");
     const [streamReloadKey, setStreamReloadKey] = useState<number>(0);
 
-    // Pinggy Stream States (Live AI Rokok - Substream Channel 102 via Pinggy)
-    const [pinggyUrl, setPinggyUrl] = useState<string>(() => {
+    // WebRTC Stream via Pinggy Raspi States
+    const [pinggyWebRtcBase, setPinggyWebRtcBase] = useState<string>(() => {
         if (typeof window !== "undefined") {
-            return localStorage.getItem("esis_pinggy_stream_url") || "http://localhost:8001";
+            return localStorage.getItem("esis_pinggy_webrtc_url") || "https://stream.ucim.my.id";
         }
-        return "http://localhost:8001";
+        return "https://stream.ucim.my.id";
     });
-    const [inputPinggyUrl, setInputPinggyUrl] = useState<string>(() => {
+    const [inputPinggyWebRtc, setInputPinggyWebRtc] = useState<string>(() => {
         if (typeof window !== "undefined") {
-            return localStorage.getItem("esis_pinggy_stream_url") || "http://localhost:8001";
+            return localStorage.getItem("esis_pinggy_webrtc_url") || "https://stream.ucim.my.id";
         }
-        return "http://localhost:8001";
+        return "https://stream.ucim.my.id";
     });
-    const [aiStatus, setAiStatus] = useState<"checking" | "connected" | "disconnected">("checking");
-    const [aiLab, setAiLab] = useState<string>("Lab Riset Lantai 5");
-    const [aiFps, setAiFps] = useState<number>(0);
+
+    // AI Telemetry States (AI Laptop di Mainstream 101 -> Kirim Lokasi Patroli & Koordinat Rokok)
+    const [telemetry, setTelemetry] = useState<{
+        online: boolean;
+        current_lab: string;
+        cam_key: string;
+        ecam_path: string;
+        is_smoking: boolean;
+        smoking_duration: number;
+        boxes: Array<{ x: number; y: number; w: number; h: number; conf: number }>;
+        fps: number;
+        has_person: boolean;
+        auto_skip_countdown: number;
+        status: string;
+    }>({
+        online: false,
+        current_lab: "Lab Sistem Digital",
+        cam_key: "lab_sisdig",
+        ecam_path: "ecam_lab_sisdig",
+        is_smoking: false,
+        smoking_duration: 0,
+        boxes: [],
+        fps: 0,
+        has_person: false,
+        auto_skip_countdown: 10,
+        status: "offline",
+    });
     const [actionLoading, setActionLoading] = useState<boolean>(false);
     const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-    // Health check polling ke URL Pinggy saat di tab "ai_stream"
+    // Polling telemetri AI patroli saat berada di tab "ai_stream"
     useEffect(() => {
         if (viewMode !== "ai_stream") return;
 
         let isMounted = true;
-        const cleanUrl = pinggyUrl.replace(/\/+$/, "");
-
-        const checkHealth = async () => {
+        const fetchTelemetry = async () => {
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3500);
-                const res = await fetch(`${cleanUrl}/health`, {
-                    signal: controller.signal,
-                    headers: { "Cache-Control": "no-cache" },
-                });
-                clearTimeout(timeoutId);
-
+                // 1. Coba ambil dari Next.js Web API
+                const res = await fetch("/api/ai/live-feed", { cache: "no-store" });
                 if (res.ok && isMounted) {
                     const data = await res.json();
-                    setAiStatus("connected");
-                    if (data.lab || data.active_lab) setAiLab(data.lab || data.active_lab);
-                    if (data.fps !== undefined) setAiFps(data.fps);
-                } else if (isMounted) {
-                    setAiStatus("disconnected");
+                    if (data.online) {
+                        setTelemetry(data);
+                        return;
+                    }
+                }
+
+                // 2. Fallback Langsung: Hubungi AI Server Lokal di http://localhost:8001/telemetry
+                try {
+                    const localController = new AbortController();
+                    const localTimeout = setTimeout(() => localController.abort(), 1200);
+                    const localRes = await fetch("http://localhost:8001/telemetry", {
+                        cache: "no-store",
+                        signal: localController.signal,
+                    });
+                    clearTimeout(localTimeout);
+
+                    if (localRes.ok && isMounted) {
+                        const localData = await localRes.json();
+                        setTelemetry({
+                            online: true,
+                            current_lab: localData.current_lab || "Lab Sistem Digital",
+                            cam_key: localData.cam_key || "lab_sisdig",
+                            ecam_path: localData.ecam_path || "ecam_lab_sisdig",
+                            is_smoking: Boolean(localData.is_smoking),
+                            smoking_duration: localData.smoking_duration || 0,
+                            boxes: localData.boxes || [],
+                            fps: localData.fps || 0,
+                            has_person: Boolean(localData.has_person),
+                            auto_skip_countdown: localData.auto_skip_countdown || 10,
+                            status: localData.status || "online",
+                        });
+                        return;
+                    }
+                } catch {
+                    // Port 8001 tidak dapat dihubungi
+                }
+
+                if (isMounted) {
+                    setTelemetry((prev) => ({ ...prev, online: false }));
                 }
             } catch {
                 if (isMounted) {
-                    setAiStatus("disconnected");
+                    setTelemetry((prev) => ({ ...prev, online: false }));
                 }
             }
         };
 
-        checkHealth();
-        const interval = setInterval(checkHealth, 3500);
+        fetchTelemetry();
+        const interval = setInterval(fetchTelemetry, 400);
         return () => {
             isMounted = false;
             clearInterval(interval);
         };
-    }, [viewMode, pinggyUrl, streamReloadKey]);
+    }, [viewMode, streamReloadKey]);
 
-    const handleSavePinggyUrl = (e: React.FormEvent) => {
+    const handleSavePinggyWebRtc = (e: React.FormEvent) => {
         e.preventDefault();
-        const trimmed = inputPinggyUrl.trim();
+        const trimmed = inputPinggyWebRtc.trim().replace(/\/+$/, "");
         if (trimmed) {
-            setPinggyUrl(trimmed);
+            setPinggyWebRtcBase(trimmed);
             if (typeof window !== "undefined") {
-                localStorage.setItem("esis_pinggy_stream_url", trimmed);
+                localStorage.setItem("esis_pinggy_webrtc_url", trimmed);
             }
-            setAiStatus("checking");
             setStreamReloadKey((prev) => prev + 1);
         }
     };
@@ -251,8 +299,7 @@ export default function CCTVPage() {
         setActionLoading(true);
         setActionMessage(null);
         try {
-            const cleanUrl = pinggyUrl.replace(/\/+$/, "");
-            const res = await fetch(`${cleanUrl}${endpoint}`, {
+            const res = await fetch(`http://localhost:8001${endpoint}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
             });
@@ -261,10 +308,10 @@ export default function CCTVPage() {
                 setActionMessage(`Sukses: ${data.message || actionName}`);
                 setStreamReloadKey((prev) => prev + 1);
             } else {
-                setActionMessage(`Gagal (${res.status}): AI Server mengembalikan error.`);
+                setActionMessage(`Gagal: Server mengembalikan kode ${res.status}`);
             }
         } catch {
-            setActionMessage("Gagal menghubungi AI Server via Pinggy.");
+            setActionMessage("Gagal menghubungi AI Server lokal (port 8001).");
         } finally {
             setActionLoading(false);
             setTimeout(() => setActionMessage(null), 4000);
@@ -506,20 +553,20 @@ export default function CCTVPage() {
                 </div>
             )}
 
-            {/* View Mode: Live AI Rokok (MJPEG Stream Substream Channel 102 via Pinggy) */}
+            {/* View Mode: Live AI Rokok (WebRTC Substream via Pinggy / MediaMTX + AI Bounding Box Rokok) */}
             {viewMode === "ai_stream" && (
                 <div className="space-y-4">
-                    {/* Control Card for Pinggy AI Stream */}
+                    {/* Control Card for Pinggy MediaMTX WebRTC + AI Telemetry */}
                     <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-4 shadow-2xs">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                            {/* Input Form Pinggy URL */}
-                            <form onSubmit={handleSavePinggyUrl} className="flex-1 flex flex-col sm:flex-row gap-2">
+                            {/* Input Form Pinggy WebRTC Base URL */}
+                            <form onSubmit={handleSavePinggyWebRtc} className="flex-1 flex flex-col sm:flex-row gap-2">
                                 <div className="relative flex-1">
                                     <input
                                         type="text"
-                                        value={inputPinggyUrl}
-                                        onChange={(e) => setInputPinggyUrl(e.target.value)}
-                                        placeholder="URL Pinggy (misal: https://xxxx.a.free.pinggy.link atau http://localhost:8001)"
+                                        value={inputPinggyWebRtc}
+                                        onChange={(e) => setInputPinggyWebRtc(e.target.value)}
+                                        placeholder="URL Base WebRTC Pinggy / MediaMTX (misal: https://stream.ucim.my.id atau https://xxxx.a.free.pinggy.link)"
                                         className="w-full px-3 py-2 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-xs font-mono text-slate-800 dark:text-slate-200 outline-none focus:border-amber-600"
                                     />
                                 </div>
@@ -528,47 +575,39 @@ export default function CCTVPage() {
                                     className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold shrink-0 transition-colors flex items-center justify-center space-x-1 cursor-pointer"
                                 >
                                     <Check className="w-3.5 h-3.5" />
-                                    <span>Simpan & Sambungkan</span>
+                                    <span>Simpan URL Stream</span>
                                 </button>
                             </form>
 
-                            {/* Status Indikator AI */}
+                            {/* Status Indikator AI Server */}
                             <div className="flex items-center space-x-3 shrink-0">
                                 <div
                                     className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium border ${
-                                        aiStatus === "connected"
+                                        telemetry.online
                                             ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
-                                            : aiStatus === "checking"
-                                            ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
                                             : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800"
                                     }`}
                                 >
                                     <span
                                         className={`w-2 h-2 rounded-full ${
-                                            aiStatus === "connected"
-                                                ? "bg-emerald-500 animate-pulse"
-                                                : aiStatus === "checking"
-                                                ? "bg-amber-500 animate-ping"
-                                                : "bg-rose-500"
+                                            telemetry.online ? "bg-emerald-500 animate-pulse" : "bg-rose-500"
                                         }`}
                                     ></span>
                                     <span>
-                                        {aiStatus === "connected"
-                                            ? `AI Aktif (${aiLab} • ${aiFps} FPS)`
-                                            : aiStatus === "checking"
-                                            ? "Mengecek Koneksi..."
-                                            : "AI Offline / Belum Terkoneksi"}
+                                        {telemetry.online
+                                            ? `AI Aktif (${telemetry.current_lab} • ${telemetry.fps} FPS)`
+                                            : "AI Offline (Jalankan run_local_gui.bat)"}
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Remote Actions Bar */}
+                        {/* Remote Actions & Lab Info Bar */}
                         <div className="mt-3 pt-3 border-t border-slate-100 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-2 text-xs">
                             <div className="flex items-center space-x-2">
                                 <button
                                     type="button"
-                                    disabled={actionLoading || aiStatus !== "connected"}
+                                    disabled={actionLoading || !telemetry.online}
                                     onClick={() => handleRemoteAction("/api/patrol/switch", "Ganti Lab Patroli")}
                                     className="px-3 py-1.5 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 disabled:opacity-50 text-slate-700 dark:text-slate-200 rounded-md font-medium transition-colors flex items-center space-x-1 cursor-pointer"
                                     title="Pindahkan kamera patroli AI ke lab berikutnya"
@@ -578,13 +617,21 @@ export default function CCTVPage() {
                                 </button>
                                 <button
                                     type="button"
-                                    disabled={actionLoading || aiStatus !== "connected"}
+                                    disabled={actionLoading || !telemetry.online}
                                     onClick={() => handleRemoteAction("/api/simulate", "Simulasi Pelanggaran Rokok")}
                                     className="px-3 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 disabled:opacity-50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-md font-medium transition-colors flex items-center space-x-1 cursor-pointer"
                                     title="Kirim event tes simulasi deteksi rokok"
                                 >
                                     <Flame className="w-3.5 h-3.5" />
                                     <span>Tes Simulasi Deteksi</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setStreamReloadKey((prev) => prev + 1)}
+                                    className="p-1.5 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-200 rounded-md transition-colors"
+                                    title="Muat ulang stream WebRTC"
+                                >
+                                    <RotateCcw className="w-3.5 h-3.5" />
                                 </button>
                             </div>
 
@@ -595,13 +642,18 @@ export default function CCTVPage() {
                             )}
 
                             <div className="flex items-center space-x-3">
+                                {telemetry.online && !telemetry.has_person && (
+                                    <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                                        Lab sepi: auto-skip dalam {telemetry.auto_skip_countdown}s
+                                    </span>
+                                )}
                                 <a
-                                    href={`${pinggyUrl.replace(/\/+$/, "")}/stream`}
+                                    href={`${pinggyWebRtcBase.replace(/\/+$/, "")}/${telemetry.ecam_path}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center space-x-1"
+                                    className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center space-x-1 font-medium"
                                 >
-                                    <span>Buka Stream Langsung</span>
+                                    <span>Buka WebRTC Tab Baru</span>
                                     <ExternalLink className="w-3 h-3" />
                                 </a>
                             </div>
@@ -613,50 +665,68 @@ export default function CCTVPage() {
                         {/* Header Stream */}
                         <div className="px-4 py-3 bg-neutral-900/95 border-b border-neutral-800 text-white flex items-center justify-between text-xs">
                             <div className="flex items-center space-x-2 truncate">
-                                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shrink-0"></span>
+                                <span className={`w-2.5 h-2.5 rounded-full ${telemetry.online ? "bg-emerald-500 animate-pulse" : "bg-rose-500"} shrink-0`}></span>
                                 <h3 className="font-bold text-white text-sm truncate">
-                                    Live Stream Substream AI: {aiLab}
+                                    Live Substream: {telemetry.current_lab} ({telemetry.ecam_path})
                                 </h3>
                             </div>
                             <div className="flex items-center space-x-2 shrink-0">
-                                <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-rose-900/60 text-rose-300 border border-rose-700 flex items-center space-x-1">
+                                {telemetry.is_smoking ? (
+                                    <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-rose-600 text-white animate-pulse flex items-center space-x-1 shadow">
+                                        <Flame className="w-3 h-3" />
+                                        <span>TERDETEKSI MEROKOK ({telemetry.smoking_duration.toFixed(1)}s)</span>
+                                    </span>
+                                ) : (
+                                    <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800 flex items-center space-x-1">
+                                        <Check className="w-3 h-3" />
+                                        <span>Tidak Ada Rokok</span>
+                                    </span>
+                                )}
+                                <span className="px-2.5 py-0.5 rounded text-[11px] font-semibold bg-amber-900/60 text-amber-300 border border-amber-700 flex items-center space-x-1">
                                     <Flame className="w-3 h-3" />
                                     <span>Bounding Box: Objek Rokok Saja</span>
                                 </span>
                             </div>
                         </div>
 
-                        {/* Stream Feed Body: MJPEG Stream via Pinggy */}
-                        <div className="w-full aspect-video bg-black relative flex items-center justify-center min-h-[380px] max-h-[70vh]">
-                            {aiStatus === "connected" ? (
-                                /* eslint-disable-next-line @next/next/no-img-element */
-                                <img
-                                    src={`${pinggyUrl.replace(/\/+$/, "")}/stream?t=${streamReloadKey}`}
-                                    alt="Live AI Rokok Stream"
-                                    className="w-full h-full object-contain"
-                                    onError={() => setAiStatus("disconnected")}
-                                />
-                            ) : (
-                                <div className="text-center p-8 max-w-md">
-                                    <AlertCircle className="w-12 h-12 text-slate-500 mx-auto mb-3" />
-                                    <h4 className="text-slate-200 font-bold text-sm mb-1">
-                                        Stream Pinggy Belum Terhubung
-                                    </h4>
-                                    <p className="text-slate-400 text-xs mb-4">
-                                        Pastikan tunnel Pinggy aktif dan masukkan URL publiknya di kolom input atas:
-                                        <br />
-                                        <span className="font-mono text-[11px] text-amber-400">
-                                            https://xxxx.a.free.pinggy.link
-                                        </span>
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={handleRefreshAll}
-                                        className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold inline-flex items-center space-x-1.5 transition-colors cursor-pointer"
-                                    >
-                                        <RotateCcw className="w-3.5 h-3.5" />
-                                        <span>Coba Sambungkan Ulang</span>
-                                    </button>
+                        {/* Stream Feed Body: WebRTC Substream via Pinggy / MediaMTX + Cigarette Bounding Box Overlay */}
+                        <div className="w-full aspect-video bg-black relative flex items-center justify-center min-h-[380px] max-h-[70vh] overflow-hidden">
+                            {/* Iframe WebRTC Substream */}
+                            <iframe
+                                key={`${telemetry.ecam_path}-${streamReloadKey}`}
+                                src={`${pinggyWebRtcBase.replace(/\/+$/, "")}/${telemetry.ecam_path}`}
+                                className="w-full h-full border-none pointer-events-auto"
+                                allowFullScreen
+                                title={`Live WebRTC Substream ${telemetry.current_lab}`}
+                            />
+
+                            {/* Bounding Box Overlay (HANYA OBJEK ROKOK) */}
+                            {telemetry.online && telemetry.boxes && telemetry.boxes.length > 0 && (
+                                <div className="absolute inset-0 pointer-events-none">
+                                    {telemetry.boxes.map((box, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="absolute border-2 border-rose-500 bg-rose-500/25 rounded shadow-[0_0_15px_rgba(244,63,94,0.9)] transition-all duration-150 animate-pulse pointer-events-none"
+                                            style={{
+                                                left: `${Math.max(0, Math.min(95, box.x * 100))}%`,
+                                                top: `${Math.max(0, Math.min(95, box.y * 100))}%`,
+                                                width: `${Math.max(2, Math.min(100, box.w * 100))}%`,
+                                                height: `${Math.max(2, Math.min(100, box.h * 100))}%`,
+                                            }}
+                                        >
+                                            <span className="absolute -top-6 left-0 bg-rose-600 text-white font-mono text-[10px] font-bold px-1.5 py-0.5 rounded shadow whitespace-nowrap">
+                                                ROKOK: {Math.round(box.conf * 100)}% ({telemetry.smoking_duration.toFixed(1)}s)
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Overlay jika AI Server Offline */}
+                            {!telemetry.online && (
+                                <div className="absolute top-3 left-3 bg-neutral-900/90 border border-neutral-700 px-3 py-1.5 rounded-lg text-xs text-amber-400 font-medium pointer-events-none flex items-center space-x-2 backdrop-blur-xs">
+                                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                                    <span>AI Server belum terhubung. Jalankan `run_local_gui.bat` di laptop.</span>
                                 </div>
                             )}
                         </div>
@@ -664,10 +734,10 @@ export default function CCTVPage() {
                         {/* Footer Deskripsi */}
                         <div className="px-4 py-2.5 bg-neutral-900 text-slate-400 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-t border-neutral-800">
                             <span>
-                                💡 <strong>Live Substream AI via Pinggy:</strong> Feed video menggunakan Substream (Channel 102) agar cepat & hemat bandwidth. Bounding box khusus objek rokok ditampilkan saat merokok terdeteksi.
+                                💡 <strong>WebRTC Substream via Raspi:</strong> Video streaming menggunakan Substream (ecam) dari MediaMTX Raspi sehingga ringan & lancar. AI Server di laptop memproses Mainstream 1080p dan mengirimkan koordinat rokok secara real-time.
                             </span>
                             <span className="text-slate-500 shrink-0 font-mono text-[10px]">
-                                Target: {pinggyUrl}
+                                Target Substream: {telemetry.ecam_path}
                             </span>
                         </div>
                     </div>
