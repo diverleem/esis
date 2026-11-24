@@ -14,21 +14,21 @@ var _s = __turbopack_context__.k.signature();
 "use client";
 ;
 ;
+const emptySubscribe = ()=>()=>{};
 function Providers({ children }) {
     _s();
-    // Menghindari hydration mismatch dengan mengecek apakah sudah di sisi client
-    const [mounted, setMounted] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
-        "Providers.useEffect": ()=>{
-            setMounted(true);
-        }
-    }["Providers.useEffect"], []);
+    // Menghindari hydration mismatch menggunakan useSyncExternalStore resmi React 19
+    const mounted = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSyncExternalStore"])(emptySubscribe, {
+        "Providers.useSyncExternalStore[mounted]": ()=>true
+    }["Providers.useSyncExternalStore[mounted]"], {
+        "Providers.useSyncExternalStore[mounted]": ()=>false
+    }["Providers.useSyncExternalStore[mounted]"]);
     if (!mounted) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
             children: children
         }, void 0, false, {
             fileName: "[project]/app/providers.tsx",
-            lineNumber: 15,
+            lineNumber: 13,
             columnNumber: 16
         }, this);
     }
@@ -39,11 +39,15 @@ function Providers({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/app/providers.tsx",
-        lineNumber: 19,
+        lineNumber: 17,
         columnNumber: 9
     }, this);
 }
-_s(Providers, "LrrVfNW3d1raFE0BNzCTILYmIfo=");
+_s(Providers, "Zt+J0CYJCC6mBujuJJ8MroKOYmI=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSyncExternalStore"]
+    ];
+});
 _c = Providers;
 var _c;
 __turbopack_context__.k.register(_c, "Providers");

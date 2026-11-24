@@ -1,26 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import {
     Video,
     ShieldAlert,
     Clock,
     FileCheck,
     ExternalLink,
-    Play,
-    Pause,
     CheckCircle2,
-    AlertCircle,
-    Maximize2,
-    Eye,
-    Building2,
-    Calendar,
-    Filter,
+    Eye
 } from "lucide-react";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useTheme } from "next-themes";
 import { getGroupBadgeColor } from "@/utils/colors";
+
+const emptySubscribe = () => () => {};
 
 // Data tren deteksi mingguan di Pusat Laboratorium Terpadu (PLT)
 const weeklyIncidentData = [
@@ -91,7 +86,7 @@ const initialRecentIncidents = [
 
 export default function DashboardPage() {
     const { theme } = useTheme();
-    const [mounted, setMounted] = useState(false);
+    const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
     const [currentUser, setCurrentUser] = useState<{ id: string; username: string; role: string; name?: string } | null>(null);
     const [incidents, setIncidents] = useState(initialRecentIncidents);
     const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -99,7 +94,6 @@ export default function DashboardPage() {
     const [dashboardCameras, setDashboardCameras] = useState<DashboardCam[]>([]);
 
     useEffect(() => {
-        setMounted(true);
         fetch("/api/auth/me")
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
@@ -474,8 +468,8 @@ export default function DashboardPage() {
                         <p className="text-[11px] text-slate-400 mt-0.5">Semua kondisi laboratorium terpantau tertib dan aman.</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
+                    <div className="overflow-x-auto -mx-1 sm:mx-0">
+                        <table className="w-full text-left text-xs min-w-[680px]">
                             <thead>
                                 <tr className="border-b border-slate-200 dark:border-neutral-800 text-slate-500 dark:text-slate-400 font-semibold">
                                     <th className="pb-3 pl-1">No. Berkas</th>

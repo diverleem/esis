@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { User, Lock, AlertCircle, Loader2, Shield, Eye, EyeOff, Video } from "lucide-react";
 
 export default function LoginPage() {
+    const router = useRouter();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +33,7 @@ export default function LoginPage() {
             }
 
             // Redirect ke dashboard
-            window.location.href = "/";
+            router.replace("/");
         } catch {
             setErrorMsg("Gagal terhubung ke server. Silakan coba lagi nanti.");
             setIsLoading(false);
@@ -39,7 +41,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="h-screen w-full flex overflow-hidden bg-slate-100 dark:bg-neutral-950 font-sans">
+        <div className="min-h-screen w-full flex overflow-y-auto bg-slate-100 dark:bg-neutral-950 font-sans">
             {/* Sisi Kiri: Branding VMS & Layanan Akademik Laboratorium */}
             <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 text-white flex-col justify-between p-12 border-r border-slate-800">
                 {/* Background Pattern halus & bernuansa surveillance */}
@@ -89,7 +91,7 @@ export default function LoginPage() {
             </div>
 
             {/* Sisi Kanan: Formulir Masuk */}
-            <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-6 sm:p-10 bg-white dark:bg-neutral-900">
+            <div className="w-full lg:w-1/2 min-h-screen flex items-center justify-center p-4 sm:p-8 lg:p-10 bg-white dark:bg-neutral-900 overflow-y-auto">
                 <div className="w-full max-w-sm space-y-6">
                     {/* Header Formulir */}
                     <div>

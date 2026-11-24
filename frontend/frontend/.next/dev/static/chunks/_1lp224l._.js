@@ -57,7 +57,7 @@ function LoginPage() {
         }
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        className: "h-screen w-full flex overflow-hidden bg-slate-100 dark:bg-neutral-950 font-sans",
+        className: "min-h-screen w-full flex overflow-y-auto bg-slate-100 dark:bg-neutral-950 font-sans",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "hidden lg:flex lg:w-1/2 relative bg-slate-900 text-white flex-col justify-between p-12 border-r border-slate-800",
@@ -245,7 +245,7 @@ function LoginPage() {
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "w-full lg:w-1/2 h-full flex items-center justify-center p-6 sm:p-10 bg-white dark:bg-neutral-900",
+                className: "w-full lg:w-1/2 min-h-screen flex items-center justify-center p-4 sm:p-8 lg:p-10 bg-white dark:bg-neutral-900 overflow-y-auto",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "w-full max-w-sm space-y-6",
                     children: [

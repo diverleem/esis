@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -15,6 +15,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "E.S.I.S — Sistem Pemantauan VMS Lab Terpadu",
   description: "Sistem Pemantauan CCTV dan Identifikasi Aktivitas Merokok di Lingkungan Pusat Laboratorium Terpadu (PLT)",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 import { Providers } from "./providers";

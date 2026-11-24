@@ -2,21 +2,10 @@
 
 import { useState, useEffect } from "react";
 import {
-    Video,
-    RefreshCw,
-    Layers,
-    Maximize2,
     Grid2X2,
-    Grid3X3,
     Square,
-    Filter,
-    ShieldCheck,
-    AlertTriangle,
-    Eye,
-    Building2,
     RotateCcw,
-    Zap,
-    ShieldAlert
+    Maximize2
 } from "lucide-react";
 import { getGroupBadgeColor } from "@/utils/colors";
 
@@ -180,7 +169,6 @@ export default function CCTVPage() {
     const [selectedCamId, setSelectedCamId] = useState<number | string>(1);
     const [selectedGroup, setSelectedGroup] = useState<string>("all");
     const [streamReloadKey, setStreamReloadKey] = useState<number>(0);
-    const [expandedCamera, setExpandedCamera] = useState<number | string | null>(null);
 
     // Ambil daftar grouping lokasi dinamis
     useEffect(() => {
@@ -408,7 +396,7 @@ export default function CCTVPage() {
             <div
                 className={
                     viewMode === "grid"
-                        ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4"
+                        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4"
                         : "w-full max-w-4xl mx-auto"
                 }
             >

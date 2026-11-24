@@ -553,10 +553,10 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="space-y-5 relative">
+        <div className="space-y-5">
             {/* Floating Alert Toast (z-[100] Selalu Muncul di Pojok Atas, Tampak Jelas Baik Saat Modal Terbuka Maupun Tertutup) */}
             {alertToast && (
-                <div className="fixed top-5 right-5 sm:right-8 z-[100] max-w-sm w-full animate-in slide-in-from-top-4 fade-in duration-300">
+                <div className="fixed top-4 right-3 left-3 sm:left-auto sm:right-6 z-[100] sm:max-w-md w-auto animate-in slide-in-from-top-4 fade-in duration-300">
                     <div
                         className={`p-4 rounded-xl border shadow-2xl flex items-start justify-between gap-3 backdrop-blur-md ${
                             alertToast.type === "success"
@@ -627,7 +627,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Tab Navigasi Pengaturan Khusus Superadmin */}
-                <div className="flex flex-wrap border-b border-slate-200 dark:border-neutral-800 mt-5 gap-y-2 space-x-4 text-xs font-semibold">
+                <div className="flex items-center overflow-x-auto border-b border-slate-200 dark:border-neutral-800 mt-5 space-x-4 text-xs font-semibold pb-1">
                     <button
                         type="button"
                         onClick={() => handleTabChange("cctv_crud")}
@@ -803,8 +803,8 @@ export default function SettingsPage() {
                                 </p>
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-xs border-collapse">
+                            <div className="overflow-x-auto -mx-1 sm:mx-0">
+                                <table className="w-full text-left text-xs border-collapse min-w-[700px]">
                                     <thead>
                                         <tr className="bg-slate-50 dark:bg-neutral-800/80 border-b border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-slate-300 font-semibold uppercase text-[10px] tracking-wider">
                                             <th className="py-3 px-4">Nama Kamera</th>
@@ -923,8 +923,8 @@ export default function SettingsPage() {
 
             {/* MODAL FORM TAMBAH / EDIT KAMERA (SIMPLIFIED SESUAI PERMINTAAN USER) */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl max-w-lg w-full p-5 shadow-xl space-y-4 my-8">
+                <div className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-4 sm:p-5 shadow-2xl space-y-4 my-auto">
                         <div className="flex items-center justify-between border-b border-slate-100 dark:border-neutral-800 pb-3">
                             <div className="flex items-center space-x-2">
                                 <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950 flex items-center justify-center text-blue-600">
@@ -1116,8 +1116,8 @@ export default function SettingsPage() {
 
             {/* MODAL KELOLA GROUPING LOKASI (BUAT & HAPUS GRUP) */}
             {isGroupModalOpen && (
-                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl max-w-md w-full p-5 shadow-xl space-y-4">
+                <div className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-4 sm:p-5 shadow-2xl space-y-4 my-auto">
                         <div className="flex items-center justify-between border-b border-slate-100 dark:border-neutral-800 pb-3">
                             <div className="flex items-center space-x-2">
                                 <Tag className="w-4 h-4 text-blue-600" />
@@ -1237,8 +1237,8 @@ export default function SettingsPage() {
 
             {/* MODAL KONFIRMASI HAPUS KAMERA */}
             {deleteTarget && (
-                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl max-w-sm w-full p-5 shadow-xl space-y-4">
+                <div className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl max-w-sm w-full max-h-[90vh] overflow-y-auto p-4 sm:p-5 shadow-2xl space-y-4 my-auto">
                         <div className="flex items-center space-x-3 text-rose-600">
                             <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center shrink-0">
                                 <Trash2 className="w-5 h-5" />

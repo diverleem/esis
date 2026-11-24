@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
     LayoutDashboard, 
     Video, 
@@ -17,16 +17,18 @@ import {
     Sun, 
     ChevronLeft, 
     ChevronRight,
-    Shield,
-    CheckCircle2
+    Shield
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 
+const emptySubscribe = () => () => {};
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+    const router = useRouter();
     const pathname = usePathname();
     const { theme, setTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
+    const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
     // State untuk kontrol sidebar
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -69,7 +71,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ]);
 
     useEffect(() => {
-        setMounted(true);
         fetch("/api/auth/me")
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
@@ -106,7 +107,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         } catch {
             // ignore
         }
-        window.location.href = "/login";
+        router.replace("/login");
     };
 
     const getPageTitle = () => {
@@ -126,7 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Overlay Sidebar Mobile */}
             {sidebarOpen && (
                 <div 
-                    className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-xs transition-opacity"
+                    className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-xs transition-opacity"
                     onClick={() => setSidebarOpen(false)}
                     aria-label="Tutup menu sidebar"
                 />
@@ -134,7 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Sidebar (Sisi Kiri) */}
             <aside 
-                className={`fixed lg:sticky top-0 left-0 z-50 h-screen ${isMinimized ? 'w-[74px]' : 'w-[245px]'} bg-white dark:bg-neutral-900 border-r border-slate-200 dark:border-neutral-800 transform transition-all duration-300 ease-in-out ${
+                className={`fixed lg:sticky top-0 left-0 z-40 h-screen ${isMinimized ? 'w-[74px]' : 'w-[245px]'} bg-white dark:bg-neutral-900 border-r border-slate-200 dark:border-neutral-800 transform transition-all duration-300 ease-in-out ${
                     sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
                 } flex flex-col shadow-xs select-none`}
             >
@@ -235,7 +236,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Area Utama (Konten & Header) */}
             <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
                 {/* Header Atas (Top Bar VMS) */}
-                <header className="relative z-30 flex items-center justify-between h-[70px] px-4 lg:px-6 bg-white dark:bg-neutral-900 border-b border-slate-200 dark:border-neutral-800 shadow-2xs">
+                <header className="relative z-20 flex items-center justify-between h-[70px] px-3 sm:px-4 lg:px-6 bg-white dark:bg-neutral-900 border-b border-slate-200 dark:border-neutral-800 shadow-2xs">
                     <div className="flex items-center space-x-3">
                         <button 
                             type="button"
@@ -286,7 +287,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </button>
 
                             {showNotifications && (
-                                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-slate-200 dark:border-neutral-800 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                                <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm bg-white dark:bg-neutral-900 rounded-xl shadow-2xl border border-slate-200 dark:border-neutral-800 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
                                     <div className="px-3 py-2 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between">
                                         <div className="flex items-center space-x-1.5">
                                             <span className="text-xs font-bold text-slate-900 dark:text-white">Notifikasi Deteksi</span>
@@ -377,8 +378,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                 {/* Modal Informasi Sistem E.S.I.S */}
                 {showInfoModal && (
-                    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-                        <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl max-w-lg w-full p-6 shadow-xl relative animate-in zoom-in-95 duration-150">
+                    <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-3 sm:p-4 backdrop-blur-xs overflow-y-auto">
+                        <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-2xl relative my-auto animate-in zoom-in-95 duration-150">
                             <button 
                                 type="button"
                                 aria-label="Tutup modal informasi"
@@ -436,7 +437,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 )}
 
                 {/* Area Konten Scrollable */}
-                <div className="relative z-10 flex-1 overflow-y-auto px-4 py-5 lg:px-6">
+                <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-5 lg:px-6">
                     {children}
                 </div>
             </main>
