@@ -13,6 +13,7 @@ import {
     MapPin, 
     User, 
     FileText, 
+    FileDown,
     Check, 
     ExternalLink,
     Camera,
@@ -38,6 +39,8 @@ interface ViolationRecord {
     evidence_image_url?: string;
     verifiedBy?: string;
     verifiedAt?: string;
+    sp_number?: string;
+    sp_file_url?: string;
 }
 
 interface ApiViolation {
@@ -56,6 +59,8 @@ interface ApiViolation {
     evidence_image_url?: string;
     verified_by?: string | null;
     verified_at?: string | null;
+    sp_number?: string | null;
+    sp_file_url?: string | null;
 }
 
 const statusMap: Record<string, string> = {
@@ -164,6 +169,7 @@ export default function ViolationPage() {
     const [selectedStatus, setSelectedStatus] = useState<string>("all");
     const [selectedRecord, setSelectedRecord] = useState<ViolationRecord | null>(null);
     const [adminNotes, setAdminNotes] = useState("");
+    const [isVerifyingSp, setIsVerifyingSp] = useState(false);
 
     // Modal Tambah Pelanggaran Manual (Hanya Role Staff)
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
@@ -244,6 +250,8 @@ export default function ViolationPage() {
                             evidence_image_url: v.evidence_image_url,
                             verifiedBy: v.verified_by || undefined,
                             verifiedAt: v.verified_at ? new Date(v.verified_at).toLocaleString("id-ID") : undefined,
+                            sp_number: v.sp_number || undefined,
+                            sp_file_url: v.sp_file_url || undefined,
                         };
                     });
                     setRecords(mapped);
@@ -491,8 +499,9 @@ export default function ViolationPage() {
         const adminName = currentUser?.name || currentUser?.username || "Admin";
         const finalNotes = adminNotes.trim();
 
+        setIsVerifyingSp(true);
         try {
-            await fetch("/api/violations", {
+            const res = await fetch("/api/violations", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -502,24 +511,66 @@ export default function ViolationPage() {
                     notes: finalNotes,
                 }),
             });
+            const data = await res.json();
+            const updatedV = data?.violation;
+
+            setRecords(prev => prev.map(r => {
+                if (r.id === record.id) {
+                    return {
+                        ...r,
+                        status: nextStatus,
+                        statusLabel: nextStatus === "verified" ? "Terverifikasi" : "Ditolak",
+                        verifiedBy: adminName,
+                        notes: finalNotes || "-",
+                        sp_number: updatedV?.sp_number || r.sp_number,
+                        sp_file_url: updatedV?.sp_file_url || r.sp_file_url,
+                    };
+                }
+                return r;
+            }));
         } catch {
             // fallback offline
+        } finally {
+            setIsVerifyingSp(false);
+            setSelectedRecord(null);
+            setAdminNotes("");
         }
+    };
 
-        setRecords(prev => prev.map(r => {
-            if (r.id === record.id) {
-                return {
-                    ...r,
-                    status: nextStatus,
-                    statusLabel: nextStatus === "verified" ? "Terverifikasi" : "Ditolak",
-                    verifiedBy: adminName,
-                    notes: finalNotes || "-",
-                };
+    // Generate Surat Peringatan (SP) Secara Mandiri untuk Berkas Terverifikasi
+    const handleGenerateSpDirect = async (recordId: string) => {
+        setIsVerifyingSp(true);
+        try {
+            const res = await fetch("/api/violations/generate-sp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ violation_id: recordId }),
+            });
+            const data = await res.json();
+            if (data?.success && data?.sp_file_url) {
+                setRecords(prev => prev.map(r => {
+                    if (r.id === recordId) {
+                        return {
+                            ...r,
+                            sp_number: data.sp_number,
+                            sp_file_url: data.sp_file_url,
+                        };
+                    }
+                    return r;
+                }));
+                setSelectedRecord(prev => prev && prev.id === recordId ? {
+                    ...prev,
+                    sp_number: data.sp_number,
+                    sp_file_url: data.sp_file_url,
+                } : prev);
+            } else {
+                alert(data?.message || "Gagal membuat Surat Peringatan.");
             }
-            return r;
-        }));
-        setSelectedRecord(null);
-        setAdminNotes("");
+        } catch {
+            alert("Terjadi kesalahan saat memproses Surat Peringatan.");
+        } finally {
+            setIsVerifyingSp(false);
+        }
     };
 
     // FILTER ATURAN VISIBILITAS:
@@ -717,17 +768,31 @@ export default function ViolationPage() {
                                             </span>
                                         </td>
                                         <td className="py-3.5 px-4 text-right">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setSelectedRecord(item);
-                                                    setAdminNotes(item.status === "pending" ? "" : (item.notes !== "-" ? item.notes : ""));
-                                                }}
-                                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-200 rounded-lg font-medium text-xs transition-colors border border-slate-200 dark:border-neutral-700 inline-flex items-center space-x-1"
-                                            >
-                                                <Eye className="w-3.5 h-3.5" />
-                                                <span>Detail</span>
-                                            </button>
+                                            <div className="flex items-center justify-end space-x-1.5">
+                                                {item.sp_file_url && (
+                                                    <a
+                                                        href={item.sp_file_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        title={`Unduh Surat Peringatan (${item.sp_number || "PDF"})`}
+                                                        className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg font-medium text-xs transition-colors border border-blue-200 dark:border-blue-800/80 inline-flex items-center space-x-1"
+                                                    >
+                                                        <FileDown className="w-3.5 h-3.5" />
+                                                        <span className="hidden sm:inline">Unduh SP</span>
+                                                    </a>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedRecord(item);
+                                                        setAdminNotes(item.status === "pending" ? "" : (item.notes !== "-" ? item.notes : ""));
+                                                    }}
+                                                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-200 rounded-lg font-medium text-xs transition-colors border border-slate-200 dark:border-neutral-700 inline-flex items-center space-x-1"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    <span>Detail</span>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -823,6 +888,52 @@ export default function ViolationPage() {
                                     </span>
                                 </div>
                             )}
+
+                            {/* Surat Peringatan (SP) Section */}
+                            {selectedRecord.sp_number && (
+                                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-neutral-800/60">
+                                    <span className="text-slate-500">Nomor SP:</span>
+                                    <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                                        {selectedRecord.sp_number}
+                                    </span>
+                                </div>
+                            )}
+                            {selectedRecord.sp_file_url ? (
+                                <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-neutral-800/60 bg-blue-50/70 dark:bg-blue-950/30 px-3 rounded-lg my-1.5 border border-blue-200/80 dark:border-blue-900/60">
+                                    <div className="flex items-center space-x-2">
+                                        <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                                        <div>
+                                            <p className="font-semibold text-slate-900 dark:text-slate-100 text-xs">Surat Peringatan (PDF)</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Tersimpan di Cloudflare R2</p>
+                                        </div>
+                                    </div>
+                                    <a
+                                        href={selectedRecord.sp_file_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors shrink-0"
+                                    >
+                                        <FileDown className="w-3.5 h-3.5" />
+                                        <span>Buka PDF</span>
+                                    </a>
+                                </div>
+                            ) : isVerified(selectedRecord.status) ? (
+                                <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-neutral-800/60 bg-slate-50 dark:bg-neutral-800/40 px-3 rounded-lg my-1.5 border border-slate-200 dark:border-neutral-700">
+                                    <div>
+                                        <p className="text-xs font-medium text-slate-700 dark:text-slate-300">Surat Peringatan Resmi</p>
+                                        <p className="text-[10px] text-slate-400">Belum di-generate</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        disabled={isVerifyingSp}
+                                        onClick={() => handleGenerateSpDirect(selectedRecord.id)}
+                                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors"
+                                    >
+                                        {isVerifyingSp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+                                        <span>{isVerifyingSp ? "Membuat PDF..." : "Buat PDF SP"}</span>
+                                    </button>
+                                </div>
+                            ) : null}
                             <div className="py-1">
                                 <label className="text-slate-500 font-medium block mb-1 flex items-center justify-between">
                                     <span>Catatan:</span>
@@ -859,17 +970,20 @@ export default function ViolationPage() {
                                     <div className="flex items-center space-x-2">
                                         <button
                                             type="button"
+                                            disabled={isVerifyingSp}
                                             onClick={() => handleVerifyAction(selectedRecord, "reject")}
-                                            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
+                                            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 disabled:opacity-50 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
                                         >
                                             Tolak
                                         </button>
                                         <button
                                             type="button"
+                                            disabled={isVerifyingSp}
                                             onClick={() => handleVerifyAction(selectedRecord, "acc")}
-                                            className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-2xs"
+                                            className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors shadow-2xs inline-flex items-center space-x-1.5"
                                         >
-                                            ACC Pelanggaran
+                                            {isVerifyingSp && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                                            <span>{isVerifyingSp ? "Memvalidasi & Membuat SP..." : "ACC Pelanggaran"}</span>
                                         </button>
                                     </div>
                                 </>

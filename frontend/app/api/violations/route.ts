@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifySession } from "@/utils/auth";
+import { generateSpPdf, generateSpNumber } from "@/utils/spGenerator";
+import { uploadToR2 } from "@/utils/r2";
 
 export const dynamic = "force-dynamic";
 
@@ -383,6 +385,78 @@ export async function PATCH(request: NextRequest) {
 
         if (sp_file_url !== undefined) {
             updateData.sp_file_url = sp_file_url;
+        }
+
+        // Fitur Pembuatan Surat Peringatan (SP) Otomatis:
+        // Jika status diubah menjadi verified / verified_sp1 dan belum ada sp_file_url, buat PDF dan unggah ke Cloudflare R2
+        if ((status === "verified" || status === "verified_sp1") && !updateData.sp_file_url && body.generate_sp !== false) {
+            try {
+                let studentData = {
+                    nama_lengkap: existing.student_name || "Mahasiswa",
+                    nim: existing.student_id || "-",
+                    jurusan: existing.student_department || "Teknik Informatika",
+                    fakultas: "Fakultas Sains dan Teknologi",
+                    tahun_masuk: 2021,
+                    jenis_kelamin: "L",
+                    email: existing.student_email || "-",
+                };
+
+                if (existing.student_id) {
+                    const { data: student } = await supabase
+                        .from("mahasiswa")
+                        .select("*")
+                        .eq("nim", existing.student_id)
+                        .maybeSingle();
+
+                    if (student) {
+                        studentData = {
+                            nama_lengkap: student.nama_lengkap || studentData.nama_lengkap,
+                            nim: student.nim || studentData.nim,
+                            jurusan: student.jurusan || studentData.jurusan,
+                            fakultas: student.fakultas || studentData.fakultas,
+                            tahun_masuk: student.tahun_masuk || studentData.tahun_masuk,
+                            jenis_kelamin: student.jenis_kelamin || studentData.jenis_kelamin,
+                            email: student.email || studentData.email,
+                        };
+                    }
+                } else if (existing.student_name && !existing.student_name.includes("Tidak Dikenal")) {
+                    const { data: student } = await supabase
+                        .from("mahasiswa")
+                        .select("*")
+                        .ilike("nama_lengkap", `%${existing.student_name}%`)
+                        .maybeSingle();
+
+                    if (student) {
+                        studentData = {
+                            nama_lengkap: student.nama_lengkap || studentData.nama_lengkap,
+                            nim: student.nim || studentData.nim,
+                            jurusan: student.jurusan || studentData.jurusan,
+                            fakultas: student.fakultas || studentData.fakultas,
+                            tahun_masuk: student.tahun_masuk || studentData.tahun_masuk,
+                            jenis_kelamin: student.jenis_kelamin || studentData.jenis_kelamin,
+                            email: student.email || studentData.email,
+                        };
+                    }
+                }
+
+                const generatedSpNumber = updateData.sp_number || existing.sp_number || generateSpNumber(existing.id, existing.created_at);
+                const pdfBytes = await generateSpPdf(
+                    {
+                        ...existing,
+                        sp_number: generatedSpNumber,
+                    },
+                    studentData
+                );
+
+                const cleanId = String(existing.id).replace(/[^a-zA-Z0-9_-]/g, "_");
+                const filename = `sp_${cleanId}.pdf`;
+                const uploadedUrl = await uploadToR2(pdfBytes, filename, "application/pdf");
+
+                updateData.sp_number = generatedSpNumber;
+                updateData.sp_file_url = uploadedUrl;
+            } catch (spErr) {
+                console.error("Gagal membuat SP otomatis pada PATCH /api/violations:", spErr);
+            }
         }
 
         const { data: updated, error: updateError } = await supabase
