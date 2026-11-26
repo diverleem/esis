@@ -246,6 +246,11 @@ export async function POST(request: NextRequest) {
             username_rtsp,
             password_rtsp,
             location_group = "Lantai 5 Gedung PLT",
+            ecam_path,
+            cam_path,
+            ecam_source,
+            cam_source,
+            hls_source,
             sync_mediamtx = true,
         } = body;
 
@@ -256,7 +261,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Bangun 2 path MediaMTX secara otomatis (ecam ch 102 dan cam ch 101)
+        // Bangun 2 path MediaMTX secara default (ecam ch 102 dan cam ch 101)
         const paths = generateDualRtspPaths(label, {
             ip: ip_address,
             port: port || 554,
@@ -264,13 +269,19 @@ export async function POST(request: NextRequest) {
             password: password_rtsp,
         });
 
+        const finalEcamPath = (typeof ecam_path === "string" && ecam_path.trim()) ? ecam_path.trim() : paths.ecamPath;
+        const finalCamPath = (typeof cam_path === "string" && cam_path.trim()) ? cam_path.trim() : paths.camPath;
+        const finalEcamSource = (typeof ecam_source === "string" && ecam_source.trim()) ? ecam_source.trim() : paths.ecamSource;
+        const finalCamSource = (typeof cam_source === "string" && cam_source.trim()) ? cam_source.trim() : paths.camSource;
+        const finalHlsSource = (typeof hls_source === "string" && hls_source.trim()) ? hls_source.trim() : `https://fdxuqgcmfo.a.pinggy.link/${finalEcamPath}`;
+
         let ecamSynced = false;
         let camSynced = false;
 
         // Sinkronisasi ke MediaMTX: otomatis membuat 2 path
         if (sync_mediamtx) {
-            ecamSynced = await syncSingleMtxPath(paths.ecamPath, paths.ecamSource, "add");
-            camSynced = await syncSingleMtxPath(paths.camPath, paths.camSource, "add");
+            ecamSynced = await syncSingleMtxPath(finalEcamPath, finalEcamSource, "add");
+            camSynced = await syncSingleMtxPath(finalCamPath, finalCamSource, "add");
         }
 
         const supabase = getSupabaseClient();
@@ -281,11 +292,11 @@ export async function POST(request: NextRequest) {
             port: paths.port,
             username_rtsp: username_rtsp ? username_rtsp.trim() : "",
             password_rtsp: password_rtsp ? password_rtsp.trim() : "",
-            ecam_path: paths.ecamPath,
-            cam_path: paths.camPath,
-            ecam_source: paths.ecamSource,
-            cam_source: paths.camSource,
-            hls_source: `https://fdxuqgcmfo.a.pinggy.link/${paths.ecamPath}`,
+            ecam_path: finalEcamPath,
+            cam_path: finalCamPath,
+            ecam_source: finalEcamSource,
+            cam_source: finalCamSource,
+            hls_source: finalHlsSource,
         };
 
         const { data: newStream, error: dbError } = await supabase
@@ -344,6 +355,11 @@ export async function PATCH(request: NextRequest) {
             username_rtsp,
             password_rtsp,
             location_group,
+            ecam_path,
+            cam_path,
+            ecam_source,
+            cam_source,
+            hls_source,
             sync_mediamtx = true,
         } = body;
 
@@ -368,12 +384,26 @@ export async function PATCH(request: NextRequest) {
             password: currentPass,
         });
 
+        const finalEcamPath = (typeof ecam_path === "string" && ecam_path.trim()) ? ecam_path.trim() : (existing?.ecam_path || paths.ecamPath);
+        const finalCamPath = (typeof cam_path === "string" && cam_path.trim()) ? cam_path.trim() : (existing?.cam_path || paths.camPath);
+        const finalEcamSource = (typeof ecam_source === "string" && ecam_source.trim()) ? ecam_source.trim() : (existing?.ecam_source || paths.ecamSource);
+        const finalCamSource = (typeof cam_source === "string" && cam_source.trim()) ? cam_source.trim() : (existing?.cam_source || paths.camSource);
+        const finalHlsSource = (typeof hls_source === "string" && hls_source.trim()) ? hls_source.trim() : (existing?.hls_source || `https://fdxuqgcmfo.a.pinggy.link/${finalEcamPath}`);
+
         let ecamSynced = false;
         let camSynced = false;
 
         if (sync_mediamtx) {
-            ecamSynced = await syncSingleMtxPath(paths.ecamPath, paths.ecamSource, "patch");
-            camSynced = await syncSingleMtxPath(paths.camPath, paths.camSource, "patch");
+            // Jika path name berubah, hapus path lama dari MediaMTX
+            if (existing?.ecam_path && existing.ecam_path !== finalEcamPath) {
+                await syncSingleMtxPath(existing.ecam_path, "", "delete");
+            }
+            if (existing?.cam_path && existing.cam_path !== finalCamPath) {
+                await syncSingleMtxPath(existing.cam_path, "", "delete");
+            }
+
+            ecamSynced = await syncSingleMtxPath(finalEcamPath, finalEcamSource, "patch");
+            camSynced = await syncSingleMtxPath(finalCamPath, finalCamSource, "patch");
         }
 
         const updatePayload: Record<string, unknown> = {
@@ -383,11 +413,11 @@ export async function PATCH(request: NextRequest) {
             port: paths.port,
             username_rtsp: currentUser ? currentUser.trim() : "",
             password_rtsp: currentPass ? currentPass.trim() : "",
-            ecam_path: paths.ecamPath,
-            cam_path: paths.camPath,
-            ecam_source: paths.ecamSource,
-            cam_source: paths.camSource,
-            hls_source: `https://fdxuqgcmfo.a.pinggy.link/${paths.ecamPath}`,
+            ecam_path: finalEcamPath,
+            cam_path: finalCamPath,
+            ecam_source: finalEcamSource,
+            cam_source: finalCamSource,
+            hls_source: finalHlsSource,
             updated_at: new Date().toISOString(),
         };
 

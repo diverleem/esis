@@ -26,6 +26,7 @@ import {
     ShieldAlert,
 } from "lucide-react";
 import { getGroupBadgeColor } from "@/utils/colors";
+import { slugifyCameraName } from "@/utils/rtsp";
 
 interface UserItem {
     id: string;
@@ -115,7 +116,7 @@ export default function SettingsPage() {
     const [showFormPassword, setShowFormPassword] = useState(false);
     const [cameraModalError, setCameraModalError] = useState<string | null>(null);
 
-    // Form data sederhana sesuai kebutuhan user
+    // Form data kamera sesuai kebutuhan user & custom source
     const [formData, setFormData] = useState({
         id: undefined as number | string | undefined,
         label: "", // nama kamera
@@ -124,6 +125,11 @@ export default function SettingsPage() {
         username_rtsp: "", // username (opsional)
         password_rtsp: "", // password (opsional)
         location_group: "Lantai 5 Gedung PLT", // grouping lokasi
+        ecam_path: "",
+        cam_path: "",
+        ecam_source: "",
+        cam_source: "",
+        hls_source: "",
     });
 
     // Modal Konfirmasi Hapus Kamera
@@ -272,6 +278,11 @@ export default function SettingsPage() {
             username_rtsp: "",
             password_rtsp: "",
             location_group: groups[0]?.name || "Lantai 5 Gedung PLT",
+            ecam_path: "",
+            cam_path: "",
+            ecam_source: "",
+            cam_source: "",
+            hls_source: "",
         });
         setIsModalOpen(true);
     };
@@ -287,8 +298,34 @@ export default function SettingsPage() {
             username_rtsp: item.username_rtsp || "",
             password_rtsp: item.password_rtsp || "",
             location_group: item.location_group || "Lantai 5 Gedung PLT",
+            ecam_path: item.ecam_path || "",
+            cam_path: item.cam_path || "",
+            ecam_source: item.ecam_source || "",
+            cam_source: item.cam_source || "",
+            hls_source: item.hls_source || "",
         });
         setIsModalOpen(true);
+    };
+
+    // Auto-generate source stream & MediaMTX paths dari label, IP & kredensial
+    const handleAutoGenerateSources = () => {
+        const slug = slugifyCameraName(formData.label || "kamera");
+        const ecamPath = `ecam_${slug}`;
+        const camPath = `cam_${slug}`;
+        const user = formData.username_rtsp ? encodeURIComponent(formData.username_rtsp.trim()) : "";
+        const pass = formData.password_rtsp ? encodeURIComponent(formData.password_rtsp.trim()) : "";
+        const authPart = user ? (pass ? `${user}:${pass}@` : `${user}@`) : "";
+        const ip = formData.ip_address.trim() || "172.20.32.44";
+        const port = formData.port || 554;
+
+        setFormData((prev) => ({
+            ...prev,
+            ecam_path: ecamPath,
+            cam_path: camPath,
+            ecam_source: `rtsp://${authPart}${ip}:${port}/Streaming/Channels/102`,
+            cam_source: `rtsp://${authPart}${ip}:${port}/Streaming/Channels/101`,
+            hls_source: `https://fdxuqgcmfo.a.pinggy.link/${ecamPath}`,
+        }));
     };
 
     // Submit Modal Form (Tambah atau Edit)
@@ -829,6 +866,11 @@ export default function SettingsPage() {
                                                         <div className="font-bold text-slate-900 dark:text-white">
                                                             {item.label}
                                                         </div>
+                                                        {item.hls_source && (
+                                                            <div className="text-[10px] font-mono text-blue-600 dark:text-blue-400 truncate max-w-[220px]" title={item.hls_source}>
+                                                                HLS: {item.hls_source}
+                                                            </div>
+                                                        )}
                                                     </td>
 
                                                     {/* IP Address & Port */}
@@ -1078,6 +1120,102 @@ export default function SettingsPage() {
                                         </option>
                                     ))}
                                 </select>
+                            </div>
+
+                            {/* 5. Pengaturan Lanjutan: ecam_source, cam_source, hls_source, dan paths */}
+                            <div className="pt-2.5 border-t border-slate-100 dark:border-neutral-800 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center space-x-1.5">
+                                        <span>Konfigurasi Source & HLS Stream</span>
+                                        <span className="text-slate-400 font-normal text-[11px]">(Opsional / Kustom)</span>
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={handleAutoGenerateSources}
+                                        className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+                                    >
+                                        Auto-generate dari Data di Atas
+                                    </button>
+                                </div>
+
+                                {/* ecam_source (Substream RTSP) */}
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <label className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
+                                            Source RTSP Substream (<span className="font-mono text-blue-600 dark:text-blue-400">ecam_source</span>)
+                                        </label>
+                                        <span className="text-[10px] text-slate-400">Channel 102 (Web Viewer)</span>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={formData.ecam_source}
+                                        onChange={(e) => setFormData({ ...formData, ecam_source: e.target.value })}
+                                        placeholder="rtsp://admin:pass@172.20.32.44:554/Streaming/Channels/102"
+                                        className="w-full px-3 py-1.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white font-mono text-xs outline-none focus:border-blue-600"
+                                    />
+                                </div>
+
+                                {/* cam_source (Mainstream RTSP AI) */}
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <label className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
+                                            Source RTSP Mainstream (<span className="font-mono text-blue-600 dark:text-blue-400">cam_source</span>)
+                                        </label>
+                                        <span className="text-[10px] text-slate-400">Channel 101 (AI Ingestion HD)</span>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={formData.cam_source}
+                                        onChange={(e) => setFormData({ ...formData, cam_source: e.target.value })}
+                                        placeholder="rtsp://admin:pass@172.20.32.44:554/Streaming/Channels/101"
+                                        className="w-full px-3 py-1.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white font-mono text-xs outline-none focus:border-blue-600"
+                                    />
+                                </div>
+
+                                {/* hls_source (URL Stream Web/Pinggy) */}
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <label className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
+                                            URL HLS / Web Stream (<span className="font-mono text-blue-600 dark:text-blue-400">hls_source</span>)
+                                        </label>
+                                        <span className="text-[10px] text-slate-400">Format HLS .m3u8 atau WebRTC</span>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={formData.hls_source}
+                                        onChange={(e) => setFormData({ ...formData, hls_source: e.target.value })}
+                                        placeholder="https://fdxuqgcmfo.a.pinggy.link/cam_lab_riset_lt_5 atau https://stream.ucim.my.id/..."
+                                        className="w-full px-3 py-1.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white font-mono text-xs outline-none focus:border-blue-600"
+                                    />
+                                </div>
+
+                                {/* MediaMTX Paths (ecam_path & cam_path) */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <label className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
+                                            Path Substream (<span className="font-mono text-blue-600 dark:text-blue-400">ecam_path</span>)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.ecam_path}
+                                            onChange={(e) => setFormData({ ...formData, ecam_path: e.target.value })}
+                                            placeholder="ecam_lab_riset_lt_5"
+                                            className="w-full px-3 py-1.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white font-mono text-xs outline-none focus:border-blue-600"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
+                                            Path Mainstream (<span className="font-mono text-blue-600 dark:text-blue-400">cam_path</span>)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.cam_path}
+                                            onChange={(e) => setFormData({ ...formData, cam_path: e.target.value })}
+                                            placeholder="cam_lab_riset_lt_5"
+                                            className="w-full px-3 py-1.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white font-mono text-xs outline-none focus:border-blue-600"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Tombol Aksi Modal */}

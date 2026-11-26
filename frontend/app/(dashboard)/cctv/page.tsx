@@ -754,7 +754,7 @@ export default function CCTVPage() {
                     }
                 >
                     {(viewMode === "grid" ? filteredCameras : [activeCamera]).map((cam) => {
-                        const streamUrl = `https://stream.ucim.my.id/${cam.ecam_path}`;
+                        const streamUrl = cam.hls_source || `https://stream.ucim.my.id/${cam.ecam_path}`;
 
                         return (
                             <div
