@@ -174,6 +174,54 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // 3. Syarat 3: Cooldown 1 jam untuk pelanggar yang sama
+        // Menunda laporan pelanggaran pada pelanggar yang sama selama 1 jam sejak laporan tercatat.
+        // Jika laporan sebelumnya sudah di-ACC ('verified', 'verified_sp1', 'verified_sp2', 'verified_staff')
+        // atau masih dalam antrean telaah ('pending'), maka laporan baru ditunda agar tidak duplikat.
+        // Jika laporan sebelumnya ditolak ('rejected'), maka mahasiswa tetap bisa dilaporkan kembali.
+        const bypassCooldown = Boolean(body.bypass_cooldown);
+        const isKnownStudent =
+            Boolean(resolvedStudentId) ||
+            (Boolean(resolvedName) && resolvedName !== "Mahasiswa Tidak Terdaftar" && !resolvedName.includes("Tidak Dikenal"));
+
+        if (!bypassCooldown && isKnownStudent) {
+            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+            let cooldownQuery = supabase
+                .from("violations")
+                .select("id, student_name, student_id, status, created_at, location")
+                .gte("created_at", oneHourAgo)
+                .in("status", ["pending", "verified", "verified_sp1", "verified_sp2", "verified_staff"])
+                .order("created_at", { ascending: false })
+                .limit(1);
+
+            if (resolvedStudentId && resolvedName && resolvedName !== "Mahasiswa Tidak Terdaftar") {
+                cooldownQuery = cooldownQuery.or(`student_id.eq.${resolvedStudentId},student_name.ilike.%${resolvedName}%`);
+            } else if (resolvedStudentId) {
+                cooldownQuery = cooldownQuery.eq("student_id", resolvedStudentId);
+            } else {
+                cooldownQuery = cooldownQuery.ilike("student_name", resolvedName);
+            }
+
+            const { data: activeViolations, error: cooldownError } = await cooldownQuery;
+
+            if (!cooldownError && activeViolations && activeViolations.length > 0) {
+                const active = activeViolations[0];
+                const activeTime = new Date(active.created_at).toLocaleTimeString("id-ID", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                });
+                return NextResponse.json(
+                    {
+                        success: true,
+                        cooldown_active: true,
+                        message: `Laporan pelanggaran ditunda (Cooldown 1 Jam Aktif): Mahasiswa "${resolvedName}" telah tercatat pada pukul ${activeTime} WIB di ${active.location} (Status: ${active.status}, ID: ${active.id}). Pelaporan baru diabaikan selama 1 jam.`,
+                        existing_violation: active,
+                    },
+                    { status: 200 }
+                );
+            }
+        }
+
         // Resolusi default location_group jika tidak dikirim
         let resolvedLocationGroup = rawLocationGroup ? String(rawLocationGroup).trim() : "";
         if (!resolvedLocationGroup) {

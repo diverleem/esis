@@ -3,10 +3,18 @@ node_modules/
 package-lock.json
 package.json
 
+# Next.js build & caches
+.next/
+frontend/.next/
+**/.next/
+.turbo/
+**/.turbo/
+
 # files or folders that shouldnt push to github
 ./reference
 ./mediamtx
 .env*
+*.env*
 supabase_schema.sql
 playlist_duration.txt
 ./anti-slop
@@ -24,3 +32,4 @@ AI Server/snapshots/
 
 __pycache__/
 *.pyc
+*.log

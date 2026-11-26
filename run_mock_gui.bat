@@ -26,7 +26,11 @@ echo   [Q] : Keluar
 echo ===============================================================================
 echo.
 
-cd /d "%~dp0AI Server\Plan_B_Local_Laptop"
+if exist "%~dp0AI Server\Fix\Plan_B_Local_Laptop" (
+    cd /d "%~dp0AI Server\Fix\Plan_B_Local_Laptop"
+) else (
+    cd /d "%~dp0AI Server\Plan_B_Local_Laptop"
+)
 python main_local_gui.py --mock --interval 60 --skip-sec 10 --api-port 8001 %*
 
 pause
