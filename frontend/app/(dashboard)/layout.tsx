@@ -19,10 +19,27 @@ import {
     ChevronRight,
     Shield
 } from "lucide-react";
-import { useState, useEffect, useRef, useSyncExternalStore } from "react";
+import { useState, useEffect, useRef, useSyncExternalStore, useCallback } from "react";
 import { useTheme } from "next-themes";
 
 const emptySubscribe = () => () => {};
+
+interface ViolationNotif {
+    id: string;
+    title: string;
+    location: string;
+    studentName?: string;
+    time: string;
+    unread: boolean;
+    severity: "high" | "info" | "success";
+}
+
+interface AlertBannerData {
+    id: string;
+    location: string;
+    studentName?: string;
+    time: string;
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -43,32 +60,137 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [currentUser, setCurrentUser] = useState<{ username: string; role: string; name?: string } | null>(null);
 
     // Notifikasi operasional KTR
-    const [notifications, setNotifications] = useState([
-        {
-            id: 1,
-            title: "Indikasi Aktivitas Merokok",
-            location: "Lab Programming (Lt. 5)",
-            time: "10 menit lalu",
-            unread: true,
-            severity: "high"
-        },
-        {
-            id: 2,
-            title: "Koneksi Stream MediaMTX Tersambung",
-            location: "Lab Jaringan (Lt. 6)",
-            time: "35 menit lalu",
-            unread: false,
-            severity: "info"
-        },
-        {
-            id: 3,
-            title: "Verifikasi SP-1 Mahasiswa Disetujui",
-            location: "Lab Sistem Digital",
-            time: "2 jam lalu",
-            unread: false,
-            severity: "success"
+    const [notifications, setNotifications] = useState<ViolationNotif[]>([]);
+
+    // State Alert Popup Real-time saat terjadi pelanggaran
+    const [activeAlert, setActiveAlert] = useState<AlertBannerData | null>(null);
+    const knownIdsRef = useRef<Set<string>>(new Set());
+    const isInitialLoadRef = useRef(true);
+
+    // Bunyikan nada alarm audio (Web Audio API Synthesizer)
+    const playAlertSound = useCallback(() => {
+        try {
+            const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            if (ctx.state === "suspended") {
+                ctx.resume();
+            }
+            const now = ctx.currentTime;
+
+            // Nada 1: 880Hz (A5)
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = "sine";
+            osc1.frequency.setValueAtTime(880, now);
+            gain1.gain.setValueAtTime(0.25, now);
+            gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.16);
+
+            // Nada 2: 1174Hz (D6)
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = "sine";
+            osc2.frequency.setValueAtTime(1174, now + 0.12);
+            gain2.gain.setValueAtTime(0.3, now + 0.12);
+            gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.38);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(now + 0.12);
+            osc2.stop(now + 0.38);
+        } catch {
+            // Browser autoplay restrictions
         }
-    ]);
+    }, []);
+
+    // Polling data pelanggaran real-time dari Supabase / API
+    const fetchRealtimeViolations = useCallback(async () => {
+        try {
+            const res = await fetch("/api/violations?limit=15");
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data?.success && Array.isArray(data.violations)) {
+                const viols = data.violations;
+
+                let hasNew = false;
+                let newestItem: AlertBannerData | null = null;
+
+                for (const v of viols) {
+                    if (!knownIdsRef.current.has(v.id)) {
+                        knownIdsRef.current.add(v.id);
+                        if (!isInitialLoadRef.current) {
+                            hasNew = true;
+                            const dt = new Date(v.created_at);
+                            const timeStr = dt.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+                            newestItem = {
+                                id: v.id,
+                                location: v.location,
+                                studentName: v.student_name,
+                                time: timeStr
+                            };
+                        }
+                    }
+                }
+
+                if (isInitialLoadRef.current) {
+                    isInitialLoadRef.current = false;
+                } else if (hasNew && newestItem) {
+                    playAlertSound();
+                    setActiveAlert(newestItem);
+                    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+                        new Notification("🚨 Pelanggaran Merokok Terdeteksi!", {
+                            body: `${newestItem.studentName || "Mahasiswa"} di ${newestItem.location}`,
+                            icon: "/favicon.ico",
+                        });
+                    }
+                }
+
+                // Perbarui daftar notifikasi di dropdown lonceng
+                const mappedNotifs: ViolationNotif[] = viols.slice(0, 8).map((v: { id: string; location: string; student_name: string; created_at: string; status: string }) => {
+                    const dt = new Date(v.created_at);
+                    const timeStr = dt.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+                    const isPending = v.status === "pending";
+                    return {
+                        id: v.id,
+                        title: isPending ? "Indikasi Aktivitas Merokok (Menunggu ACC)" : "Pelanggaran Terverifikasi",
+                        location: `${v.student_name || "Mahasiswa"} • ${v.location}`,
+                        studentName: v.student_name,
+                        time: timeStr,
+                        unread: isPending,
+                        severity: isPending ? "high" : "info"
+                    };
+                });
+                setNotifications(mappedNotifs);
+            }
+        } catch {
+            // ignore network error
+        }
+    }, [playAlertSound]);
+
+    useEffect(() => {
+        fetchRealtimeViolations();
+        const interval = setInterval(fetchRealtimeViolations, 4000);
+        return () => clearInterval(interval);
+    }, [fetchRealtimeViolations]);
+
+    // Minta izin Browser Notification jika didukung
+    useEffect(() => {
+        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission().catch(() => {});
+        }
+    }, []);
+
+    // Tutup popup alarm otomatis setelah 8 detik
+    useEffect(() => {
+        if (!activeAlert) return;
+        const timer = setTimeout(() => {
+            setActiveAlert(null);
+        }, 8000);
+        return () => clearTimeout(timer);
+    }, [activeAlert]);
 
     useEffect(() => {
         fetch("/api/auth/me")
@@ -432,6 +554,62 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     Tutup Informasi
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Alert Notification Popup (Melayang di Pojok Kanan Atas saat Pelanggaran Terjadi) */}
+                {activeAlert && (
+                    <div className="fixed top-5 right-5 z-[100] max-w-sm w-full bg-rose-600 dark:bg-rose-700 text-white rounded-xl p-4 shadow-2xl border border-rose-500 animate-in slide-in-from-top-4 duration-300">
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center space-x-2.5">
+                                <div className="p-2 bg-rose-700 dark:bg-rose-800 rounded-lg animate-bounce">
+                                    <ShieldAlert className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <span className="inline-block text-[10px] uppercase font-bold tracking-wider bg-rose-800/80 px-2 py-0.5 rounded text-rose-200">
+                                        Alarm Pelanggaran KTR
+                                    </span>
+                                    <h4 className="text-sm font-bold leading-tight mt-0.5">
+                                        Aktivitas Merokok Terdeteksi!
+                                    </h4>
+                                </div>
+                            </div>
+                            <button 
+                                type="button"
+                                onClick={() => setActiveAlert(null)}
+                                className="text-rose-200 hover:text-white p-1 transition-colors rounded-lg hover:bg-rose-700/50"
+                                aria-label="Tutup alert"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="mt-2.5 text-xs bg-rose-700/60 p-2.5 rounded-lg space-y-1 border border-rose-500/50">
+                            <div className="flex justify-between items-center text-rose-100 font-semibold">
+                                <span>Lokasi:</span>
+                                <span className="text-white font-bold">{activeAlert.location}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-rose-200">
+                                <span>Terduga:</span>
+                                <span className="text-white font-bold">{activeAlert.studentName || "Tidak Dikenal"}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-rose-200">
+                                <span>Waktu:</span>
+                                <span className="text-white font-mono">{activeAlert.time}</span>
+                            </div>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between">
+                            <span className="text-[11px] text-rose-200 flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-amber-300 animate-ping inline-block"></span>
+                                <span>Baru saja terjadi</span>
+                            </span>
+                            <Link
+                                href="/violation"
+                                onClick={() => setActiveAlert(null)}
+                                className="px-3.5 py-1.5 bg-white text-rose-700 hover:bg-rose-50 rounded-lg text-xs font-bold shadow-xs transition-colors"
+                            >
+                                Buka Berkas →
+                            </Link>
                         </div>
                     </div>
                 )}

@@ -272,7 +272,7 @@ export async function POST(request: NextRequest) {
                 ? String(rawNotes).trim()
                 : customStatus === "verified_staff"
                   ? "Laporan langsung petugas di lokasi."
-                  : "Terdeteksi aktivitas merokok oleh sistem kamera pengawas.",
+                  : "",
             verified_by: customStatus === "verified_staff" ? String(body.verified_by || "Petugas") : null,
             verified_at: customStatus === "verified_staff" ? new Date().toISOString() : null,
         };

@@ -158,11 +158,12 @@ const isVerified = (status: string) =>
     status === "verified" || status === "verified_staff" || status === "verified_sp1" || status === "verified_sp2";
 
 export default function ViolationPage() {
-    const [records, setRecords] = useState<ViolationRecord[]>(initialViolations);
+    const [records, setRecords] = useState<ViolationRecord[]>([]);
     const [currentUser, setCurrentUser] = useState<{ id: string; username: string; role: string; name?: string } | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedStatus, setSelectedStatus] = useState<string>("all");
     const [selectedRecord, setSelectedRecord] = useState<ViolationRecord | null>(null);
+    const [adminNotes, setAdminNotes] = useState("");
 
     // Modal Tambah Pelanggaran Manual (Hanya Role Staff)
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
@@ -213,7 +214,7 @@ export default function ViolationPage() {
         fetch("/api/violations")
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
-                if (data?.success && Array.isArray(data.violations) && data.violations.length > 0) {
+                if (data?.success && Array.isArray(data.violations)) {
                     const mapped: ViolationRecord[] = data.violations.map((v: ApiViolation) => {
                         const dt = new Date(v.created_at);
                         const dateStr = dt.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
@@ -253,6 +254,8 @@ export default function ViolationPage() {
 
     useEffect(() => {
         loadViolations();
+        const interval = setInterval(loadViolations, 4000);
+        return () => clearInterval(interval);
     }, [loadViolations]);
 
     // Menghentikan stream kamera perangkat
@@ -486,6 +489,7 @@ export default function ViolationPage() {
     const handleVerifyAction = async (record: ViolationRecord, action: "acc" | "reject") => {
         const nextStatus = action === "acc" ? "verified" : "rejected";
         const adminName = currentUser?.name || currentUser?.username || "Admin";
+        const finalNotes = adminNotes.trim();
 
         try {
             await fetch("/api/violations", {
@@ -495,6 +499,7 @@ export default function ViolationPage() {
                     id: record.id,
                     status: nextStatus,
                     verified_by: adminName,
+                    notes: finalNotes,
                 }),
             });
         } catch {
@@ -508,11 +513,13 @@ export default function ViolationPage() {
                     status: nextStatus,
                     statusLabel: nextStatus === "verified" ? "Terverifikasi" : "Ditolak",
                     verifiedBy: adminName,
+                    notes: finalNotes || "-",
                 };
             }
             return r;
         }));
         setSelectedRecord(null);
+        setAdminNotes("");
     };
 
     // FILTER ATURAN VISIBILITAS:
@@ -712,7 +719,10 @@ export default function ViolationPage() {
                                         <td className="py-3.5 px-4 text-right">
                                             <button
                                                 type="button"
-                                                onClick={() => setSelectedRecord(item)}
+                                                onClick={() => {
+                                                    setSelectedRecord(item);
+                                                    setAdminNotes(item.status === "pending" ? "" : (item.notes !== "-" ? item.notes : ""));
+                                                }}
                                                 className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-200 rounded-lg font-medium text-xs transition-colors border border-slate-200 dark:border-neutral-700 inline-flex items-center space-x-1"
                                             >
                                                 <Eye className="w-3.5 h-3.5" />
@@ -814,10 +824,27 @@ export default function ViolationPage() {
                                 </div>
                             )}
                             <div className="py-1">
-                                <span className="text-slate-500 block mb-1">Catatan:</span>
-                                <p className="p-2.5 rounded-lg bg-slate-50 dark:bg-neutral-800 text-slate-700 dark:text-slate-300">
-                                    {selectedRecord.notes}
-                                </p>
+                                <label className="text-slate-500 font-medium block mb-1 flex items-center justify-between">
+                                    <span>Catatan:</span>
+                                    {isAdmin && selectedRecord.status === "pending" && (
+                                        <span className="text-[10px] text-slate-400 font-normal">
+                                            (Dikosongkan dari AI — Anda dapat mengisi catatan sebelum validasi atau tolak)
+                                        </span>
+                                    )}
+                                </label>
+                                {isAdmin && selectedRecord.status === "pending" ? (
+                                    <textarea
+                                        value={adminNotes}
+                                        onChange={(e) => setAdminNotes(e.target.value)}
+                                        placeholder="Tulis catatan evaluasi di sini (opsional)..."
+                                        rows={3}
+                                        className="w-full p-2.5 rounded-lg bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 text-xs outline-none focus:border-blue-600 transition-all resize-none"
+                                    />
+                                ) : (
+                                    <p className="p-2.5 rounded-lg bg-slate-50 dark:bg-neutral-800 text-slate-700 dark:text-slate-300">
+                                        {selectedRecord.notes || "-"}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
