@@ -9,11 +9,11 @@ echo   PLAN A: RunPod Cloud Inference - Mode Terminal
 echo ===============================================================================
 echo.
 echo  Target Kamera : Lab Riset Lantai 5
-echo  Stream Source : https://stream.ucim.my.id/cam_lab_riset_lt_5/
+echo  Stream Source : https://fdxuqgcmfo.a.pinggy.link/cam_lab_riset_lt_5/index.m3u8
 echo  API Server    : http://localhost:8001/
 echo.
 echo  Pilihan Eksekusi:
-echo   - Default                        : Langsung membaca https://stream.ucim.my.id/cam_lab_riset_lt_5/
+echo   - Default                        : Langsung membaca https://fdxuqgcmfo.a.pinggy.link/cam_lab_riset_lt_5/index.m3u8
 echo   - Custom Stream Link             : run_plan_a_terminal.bat --stream-url ^<LINK_STREAM_CAM^>
 echo   - Mode Mock Webcam Simulasi      : run_plan_a_terminal.bat --mock
 echo.
