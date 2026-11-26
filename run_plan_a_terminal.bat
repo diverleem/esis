@@ -1,21 +1,23 @@
 @echo off
 chcp 65001 > nul
-title E.S.I.S Plan A: RunPod Terminal Monitor (Lab Riset Lt 5)
+title E.S.I.S Plan A: RunPod Terminal Monitor (4 Kamera Serentak)
 cls
 
 echo ===============================================================================
 echo   E.S.I.S (Electronic Smoking Identification System)
-echo   PLAN A: RunPod Cloud Inference - Mode Terminal
+echo   PLAN A: RunPod Cloud Inference - Mode Terminal (4 Kamera Serentak)
 echo ===============================================================================
 echo.
-echo  Target Kamera : Lab Riset Lantai 5
-echo  Stream Source : https://fdxuqgcmfo.a.pinggy.link/cam_lab_riset_lt_5/index.m3u8
+echo  Target Kamera : 4 Kamera (Lab Riset Lt 5, Lab OS, Lab Programming, Lobby Lt 5)
+echo  Stream Source : Pinggy Pro HLS Port 8888 (fdxuqgcmfo.a.pinggy.link)
+echo  Gated AI      : AI Rokok & Wajah HANYA jalan jika terdeteksi manusia
+echo  Auto-Sleep    : Jika nihil manusia 10 detik -> AI Rokok/Wajah tidur 1 menit
 echo  API Server    : http://localhost:8001/
+echo  Stream MJPEG  : http://localhost:8001/stream (Grid 2x2 CCTV)
 echo.
 echo  Pilihan Eksekusi:
-echo   - Default                        : Langsung membaca https://fdxuqgcmfo.a.pinggy.link/cam_lab_riset_lt_5/index.m3u8
-echo   - Custom Stream Link             : run_plan_a_terminal.bat --stream-url ^<LINK_STREAM_CAM^>
-echo   - Mode Mock Webcam Simulasi      : run_plan_a_terminal.bat --mock
+echo   - Default                        : Memantau 4 kamera serentak via Pinggy
+echo   - Mode Mock Simulasi             : run_plan_a_terminal.bat --mock
 echo.
 echo  Tekan Ctrl+C di terminal untuk berhenti kapan saja.
 echo ===============================================================================
