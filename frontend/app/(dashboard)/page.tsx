@@ -110,16 +110,18 @@ export default function DashboardPage() {
                 if (data?.success && Array.isArray(data.streams)) {
                     setTotalCameras(data.streams.length);
 
-                    // Ambil kamera yang memiliki link streaming / pinggy dari database
+                    // Ambil kamera untuk tampilan Quick Video Wall (gunakan WebRTC Substream ecam)
                     const streamsWithPinggy: DashboardCam[] = data.streams
                         .filter((s: { hls_source?: string; ecam_path?: string }) => Boolean(s.hls_source || s.ecam_path))
                         .map((s: { id: number | string; label: string; location_group?: string; hls_source?: string; ecam_path?: string }) => {
-                            const pinggyUrl = s.hls_source || `https://fdxuqgcmfo.a.pinggy.link/${s.ecam_path}`;
+                            const rawEcam = s.ecam_path || "ecam_lab_sisdig";
+                            const cleanEcam = rawEcam.startsWith("ecam") ? rawEcam : `ecam_${rawEcam.replace(/^cam_/, "")}`;
+                            const webrtcUrl = `https://stream.ucim.my.id/${cleanEcam}/`;
                             return {
                                 id: s.id,
                                 label: s.label,
                                 location_group: s.location_group || "Lantai 5 Gedung PLT",
-                                url: pinggyUrl,
+                                url: webrtcUrl,
                             };
                         });
 

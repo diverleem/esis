@@ -473,10 +473,10 @@ export default function CCTVPage() {
                         {/* Status Otomatis Substream */}
                         <div 
                             className="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs border bg-slate-100 dark:bg-neutral-800 border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-slate-300 select-none font-medium"
-                            title="Streaming CCTV otomatis menggunakan Substream (ecam) hemat bandwidth; Mainstream dialokasikan untuk inferensi AI"
+                            title="Streaming CCTV otomatis menggunakan WebRTC Substream (ecam) hemat bandwidth; HLS dialokasikan khusus untuk inferensi AI Server"
                         >
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span>Substream (ecam)</span>
+                            <span>WebRTC Substream (ecam)</span>
                         </div>
 
                         {/* Tombol Muat Ulang Stream */}
@@ -648,7 +648,7 @@ export default function CCTVPage() {
                                     </span>
                                 )}
                                 <a
-                                    href={`${pinggyWebRtcBase.replace(/\/+$/, "")}/${telemetry.ecam_path}`}
+                                    href={`${pinggyWebRtcBase.replace(/\/+$/, "")}/${telemetry.ecam_path}/`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center space-x-1 font-medium"
@@ -694,7 +694,7 @@ export default function CCTVPage() {
                             {/* Iframe WebRTC Substream */}
                             <iframe
                                 key={`${telemetry.ecam_path}-${streamReloadKey}`}
-                                src={`${pinggyWebRtcBase.replace(/\/+$/, "")}/${telemetry.ecam_path}`}
+                                src={`${pinggyWebRtcBase.replace(/\/+$/, "")}/${telemetry.ecam_path}/`}
                                 className="w-full h-full border-none pointer-events-auto"
                                 allowFullScreen
                                 title={`Live WebRTC Substream ${telemetry.current_lab}`}
@@ -754,7 +754,11 @@ export default function CCTVPage() {
                     }
                 >
                     {(viewMode === "grid" ? filteredCameras : [activeCamera]).map((cam) => {
-                        const streamUrl = cam.hls_source || `https://stream.ucim.my.id/${cam.ecam_path}`;
+                        // Selalu gunakan WebRTC Substream dengan format awalan ecam (HLS dikhususkan untuk AI Server)
+                        const rawEcam = cam.ecam_path || `ecam_${String(cam.cam_path || "cam").replace(/^cam_/, "")}`;
+                        const cleanEcam = rawEcam.startsWith("ecam") ? rawEcam : `ecam_${rawEcam.replace(/^cam_/, "")}`;
+                        const base = (pinggyWebRtcBase || "https://stream.ucim.my.id").replace(/\/+$/, "");
+                        const streamUrl = `${base}/${cleanEcam}/`;
 
                         return (
                             <div
