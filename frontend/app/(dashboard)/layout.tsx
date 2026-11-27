@@ -171,9 +171,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }, [playAlertSound]);
 
     useEffect(() => {
-        fetchRealtimeViolations();
+        const timer = setTimeout(fetchRealtimeViolations, 0);
         const interval = setInterval(fetchRealtimeViolations, 4000);
-        return () => clearInterval(interval);
+        return () => {
+            clearTimeout(timer);
+            clearInterval(interval);
+        };
     }, [fetchRealtimeViolations]);
 
     // Minta izin Browser Notification jika didukung

@@ -13,7 +13,7 @@ import {
     MapPin, 
     User, 
     FileText, 
-    FileDown,
+    Printer,
     Check, 
     ExternalLink,
     Camera,
@@ -553,41 +553,6 @@ export default function ViolationPage() {
         }
     };
 
-    // Generate Surat Peringatan (SP) Secara Mandiri untuk Berkas Terverifikasi
-    const handleGenerateSpDirect = async (recordId: string) => {
-        setIsVerifyingSp(true);
-        try {
-            const res = await fetch("/api/violations/generate-sp", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ violation_id: recordId }),
-            });
-            const data = await res.json();
-            if (data?.success && data?.sp_file_url) {
-                setRecords(prev => prev.map(r => {
-                    if (r.id === recordId) {
-                        return {
-                            ...r,
-                            sp_number: data.sp_number,
-                            sp_file_url: data.sp_file_url,
-                        };
-                    }
-                    return r;
-                }));
-                setSelectedRecord(prev => prev && prev.id === recordId ? {
-                    ...prev,
-                    sp_number: data.sp_number,
-                    sp_file_url: data.sp_file_url,
-                } : prev);
-            } else {
-                alert(data?.message || "Gagal membuat Surat Peringatan.");
-            }
-        } catch {
-            alert("Terjadi kesalahan saat memproses Surat Peringatan.");
-        } finally {
-            setIsVerifyingSp(false);
-        }
-    };
 
     // FILTER ATURAN VISIBILITAS:
     // Jika role Staff: HANYA melihat pelanggaran yang telah terverifikasi.
@@ -785,16 +750,16 @@ export default function ViolationPage() {
                                         </td>
                                         <td className="py-3.5 px-4 text-right">
                                             <div className="flex items-center justify-end space-x-1.5">
-                                                {item.sp_file_url && (
+                                                {(isVerified(item.status) || item.sp_file_url) && (
                                                     <a
-                                                        href={item.sp_file_url}
+                                                        href={`/api/violations/sp-preview?id=${item.id}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        title={`Unduh Surat Peringatan (${item.sp_number || "PDF"})`}
+                                                        title={`Buka / Cetak Surat Peringatan Resmi (${item.sp_number || "Format Word"})`}
                                                         className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-lg font-medium text-xs transition-colors border border-blue-200 dark:border-blue-800/80 inline-flex items-center space-x-1"
                                                     >
-                                                        <FileDown className="w-3.5 h-3.5" />
-                                                        <span className="hidden sm:inline">Unduh SP</span>
+                                                        <Printer className="w-3.5 h-3.5" />
+                                                        <span className="hidden sm:inline">Cetak SP</span>
                                                     </a>
                                                 )}
                                                 <button
@@ -914,40 +879,35 @@ export default function ViolationPage() {
                                     </span>
                                 </div>
                             )}
-                            {selectedRecord.sp_file_url ? (
-                                <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-neutral-800/60 bg-blue-50/70 dark:bg-blue-950/30 px-3 rounded-lg my-1.5 border border-blue-200/80 dark:border-blue-900/60">
+                            {isVerified(selectedRecord.status) ? (
+                                <div className="flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-neutral-800/60 bg-blue-50/70 dark:bg-blue-950/30 px-3 rounded-lg my-1.5 border border-blue-200/80 dark:border-blue-900/60">
                                     <div className="flex items-center space-x-2">
                                         <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                                         <div>
-                                            <p className="font-semibold text-slate-900 dark:text-slate-100 text-xs">Surat Peringatan (PDF)</p>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Tersimpan di Cloudflare R2</p>
+                                            <p className="font-semibold text-slate-900 dark:text-slate-100 text-xs">Surat Peringatan Resmi (Format Word)</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Template Resmi FST UIN Jakarta</p>
                                         </div>
                                     </div>
-                                    <a
-                                        href={selectedRecord.sp_file_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors shrink-0"
-                                    >
-                                        <FileDown className="w-3.5 h-3.5" />
-                                        <span>Buka PDF</span>
-                                    </a>
-                                </div>
-                            ) : isVerified(selectedRecord.status) ? (
-                                <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-neutral-800/60 bg-slate-50 dark:bg-neutral-800/40 px-3 rounded-lg my-1.5 border border-slate-200 dark:border-neutral-700">
-                                    <div>
-                                        <p className="text-xs font-medium text-slate-700 dark:text-slate-300">Surat Peringatan Resmi</p>
-                                        <p className="text-[10px] text-slate-400">Belum di-generate</p>
+                                    <div className="flex items-center space-x-1.5">
+                                        <a
+                                            href={`/api/violations/sp-preview?id=${selectedRecord.id}&print=1`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors shrink-0"
+                                        >
+                                            <Printer className="w-3.5 h-3.5" />
+                                            <span>Cetak PDF</span>
+                                        </a>
+                                        <a
+                                            href={`/api/violations/sp-preview?id=${selectedRecord.id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-white dark:bg-neutral-800 hover:bg-slate-100 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-neutral-700 rounded-lg text-xs font-medium transition-colors shrink-0"
+                                        >
+                                            <Eye className="w-3.5 h-3.5" />
+                                            <span>Lihat</span>
+                                        </a>
                                     </div>
-                                    <button
-                                        type="button"
-                                        disabled={isVerifyingSp}
-                                        onClick={() => handleGenerateSpDirect(selectedRecord.id)}
-                                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors"
-                                    >
-                                        {isVerifyingSp ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
-                                        <span>{isVerifyingSp ? "Membuat PDF..." : "Buat PDF SP"}</span>
-                                    </button>
                                 </div>
                             ) : null}
                             <div className="py-1">

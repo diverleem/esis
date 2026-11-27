@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { generateSpPdf, generateSpNumber } from "@/utils/spGenerator";
-import { uploadToR2 } from "@/utils/r2";
+import { generateSpNumber } from "@/utils/spGenerator";
 
 export const dynamic = "force-dynamic";
 
@@ -44,80 +43,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // 2. Ambil data mahasiswa dari tabel `students`
-        let studentData = {
-            full_name: violation.student_name || "Mahasiswa",
-            student_id: violation.student_id || "-",
-            department: violation.student_department || "Teknik Informatika",
-            faculty: "Fakultas Sains dan Teknologi",
-            entry_year: 2021,
-            gender: "L",
-            email: violation.student_email || "-",
-        };
-
-        if (violation.student_id) {
-            const { data: student } = await supabase
-                .from("students")
-                .select("*")
-                .eq("student_id", violation.student_id)
-                .maybeSingle();
-
-            if (student) {
-                studentData = {
-                    full_name: student.full_name || studentData.full_name,
-                    student_id: student.student_id || studentData.student_id,
-                    department: student.department || studentData.department,
-                    faculty: student.faculty || studentData.faculty,
-                    entry_year: student.entry_year || studentData.entry_year,
-                    gender: student.gender || studentData.gender,
-                    email: student.email || studentData.email,
-                };
-            }
-        } else if (violation.student_name && !violation.student_name.includes("Tidak Dikenal")) {
-            const { data: student } = await supabase
-                .from("students")
-                .select("*")
-                .ilike("full_name", `%${violation.student_name}%`)
-                .maybeSingle();
-
-            if (student) {
-                studentData = {
-                    full_name: student.full_name || studentData.full_name,
-                    student_id: student.student_id || studentData.student_id,
-                    department: student.department || studentData.department,
-                    faculty: student.faculty || studentData.faculty,
-                    entry_year: student.entry_year || studentData.entry_year,
-                    gender: student.gender || studentData.gender,
-                    email: student.email || studentData.email,
-                };
-            }
-        }
-
-        // 3. Tentukan nomor SP
+        // 2. Tentukan nomor SP dan URL preview
         const spNumber = violation.sp_number || generateSpNumber(violation.id, violation.created_at);
+        const spFileUrl = `/api/violations/sp-preview?id=${violation.id}`;
 
-        // 4. Generate PDF
-        const pdfBytes = await generateSpPdf(
-            {
-                id: violation.id,
-                created_at: violation.created_at,
-                location: violation.location,
-                location_group: violation.location_group,
-                evidence_image_url: violation.evidence_image_url,
-                confidence_smoking: violation.confidence_smoking,
-                face_similarity: violation.face_similarity,
-                verified_by: violation.verified_by,
-                sp_number: spNumber,
-            },
-            studentData
-        );
-
-        // 5. Upload PDF ke Cloudflare R2
-        const cleanId = String(violation.id).replace(/[^a-zA-Z0-9_-]/g, "_");
-        const filename = `sp_${cleanId}.pdf`;
-        const spFileUrl = await uploadToR2(pdfBytes, filename, "application/pdf");
-
-        // 6. Update data violation di Supabase
+        // 3. Update data violation di Supabase
         const { data: updated, error: updateError } = await supabase
             .from("violations")
             .update({

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifySession } from "@/utils/auth";
-import { generateSpPdf, generateSpNumber } from "@/utils/spGenerator";
-import { uploadToR2 } from "@/utils/r2";
+import { generateSpNumber } from "@/utils/spGenerator";
 
 export const dynamic = "force-dynamic";
 
@@ -388,72 +387,12 @@ export async function PATCH(request: NextRequest) {
         }
 
         // Fitur Pembuatan Surat Peringatan (SP) Otomatis:
-        // Jika status diubah menjadi verified / verified_sp1 dan belum ada sp_file_url, buat PDF dan unggah ke Cloudflare R2
+        // Jika status diubah menjadi verified / verified_sp1 dan belum ada sp_file_url, set nomor SP dan tautan preview SP HTML
         if ((status === "verified" || status === "verified_sp1") && !updateData.sp_file_url && body.generate_sp !== false) {
             try {
-                let studentData = {
-                    full_name: existing.student_name || "Mahasiswa",
-                    student_id: existing.student_id || "-",
-                    department: existing.student_department || "Teknik Informatika",
-                    faculty: "Fakultas Sains dan Teknologi",
-                    entry_year: 2021,
-                    gender: "L",
-                    email: existing.student_email || "-",
-                };
-
-                if (existing.student_id) {
-                    const { data: student } = await supabase
-                        .from("students")
-                        .select("*")
-                        .eq("student_id", existing.student_id)
-                        .maybeSingle();
-
-                    if (student) {
-                        studentData = {
-                            full_name: student.full_name || studentData.full_name,
-                            student_id: student.student_id || studentData.student_id,
-                            department: student.department || studentData.department,
-                            faculty: student.faculty || studentData.faculty,
-                            entry_year: student.entry_year || studentData.entry_year,
-                            gender: student.gender || studentData.gender,
-                            email: student.email || studentData.email,
-                        };
-                    }
-                } else if (existing.student_name && !existing.student_name.includes("Tidak Dikenal")) {
-                    const { data: student } = await supabase
-                        .from("students")
-                        .select("*")
-                        .ilike("full_name", `%${existing.student_name}%`)
-                        .maybeSingle();
-
-                    if (student) {
-                        studentData = {
-                            full_name: student.full_name || studentData.full_name,
-                            student_id: student.student_id || studentData.student_id,
-                            department: student.department || studentData.department,
-                            faculty: student.faculty || studentData.faculty,
-                            entry_year: student.entry_year || studentData.entry_year,
-                            gender: student.gender || studentData.gender,
-                            email: student.email || studentData.email,
-                        };
-                    }
-                }
-
                 const generatedSpNumber = updateData.sp_number || existing.sp_number || generateSpNumber(existing.id, existing.created_at);
-                const pdfBytes = await generateSpPdf(
-                    {
-                        ...existing,
-                        sp_number: generatedSpNumber,
-                    },
-                    studentData
-                );
-
-                const cleanId = String(existing.id).replace(/[^a-zA-Z0-9_-]/g, "_");
-                const filename = `sp_${cleanId}.pdf`;
-                const uploadedUrl = await uploadToR2(pdfBytes, filename, "application/pdf");
-
                 updateData.sp_number = generatedSpNumber;
-                updateData.sp_file_url = uploadedUrl;
+                updateData.sp_file_url = `/api/violations/sp-preview?id=${existing.id}`;
             } catch (spErr) {
                 console.error("Gagal membuat SP otomatis pada PATCH /api/violations:", spErr);
             }
