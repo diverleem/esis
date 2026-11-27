@@ -196,7 +196,16 @@ export default function ViolationPage() {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     // Auto-complete Mahasiswa State
-    const [studentSuggestions, setStudentSuggestions] = useState<Array<{ nim: string; nama_lengkap: string; jurusan: string }>>([]);
+    const [studentSuggestions, setStudentSuggestions] = useState<
+        Array<{
+            student_id?: string;
+            full_name?: string;
+            department?: string;
+            nim?: string;
+            nama_lengkap?: string;
+            jurusan?: string;
+        }>
+    >([]);
     const [isSearchingStudent, setIsSearchingStudent] = useState(false);
 
     // Role checks
@@ -376,7 +385,7 @@ export default function ViolationPage() {
         }
 
         setIsSearchingStudent(true);
-        fetch(`/api/mahasiswa?search=${encodeURIComponent(query.trim())}&limit=5`)
+        fetch(`/api/students?search=${encodeURIComponent(query.trim())}&limit=5`)
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
                 if (data?.success && Array.isArray(data.data)) {
@@ -393,10 +402,17 @@ export default function ViolationPage() {
             });
     };
 
-    const handleSelectStudent = (student: { nim: string; nama_lengkap: string; jurusan: string }) => {
-        setFormNIM(student.nim);
-        setFormStudentName(student.nama_lengkap);
-        setFormDepartment(student.jurusan || "");
+    const handleSelectStudent = (student: {
+        student_id?: string;
+        full_name?: string;
+        department?: string;
+        nim?: string;
+        nama_lengkap?: string;
+        jurusan?: string;
+    }) => {
+        setFormNIM(student.student_id || student.nim || "");
+        setFormStudentName(student.full_name || student.nama_lengkap || "");
+        setFormDepartment(student.department || student.jurusan || "");
         setStudentSuggestions([]);
     };
 
@@ -1055,15 +1071,15 @@ export default function ViolationPage() {
                                     {/* Hasil Pencarian Mahasiswa Dropdown */}
                                     {studentSuggestions.length > 0 && (
                                         <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg shadow-lg z-20 max-h-44 overflow-y-auto">
-                                            {studentSuggestions.map((s) => (
+                                            {studentSuggestions.map((s, idx) => (
                                                 <button
-                                                    key={s.nim}
+                                                    key={s.student_id || s.nim || idx}
                                                     type="button"
                                                     onClick={() => handleSelectStudent(s)}
                                                     className="w-full text-left px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-950/40 border-b border-slate-100 dark:border-neutral-700/60 last:border-b-0 transition-colors"
                                                 >
-                                                    <p className="font-semibold text-slate-800 dark:text-slate-200">{s.nama_lengkap}</p>
-                                                    <p className="text-[10px] text-slate-400 font-mono">NIM: {s.nim} • {s.jurusan}</p>
+                                                    <p className="font-semibold text-slate-800 dark:text-slate-200">{s.full_name || s.nama_lengkap}</p>
+                                                    <p className="text-[10px] text-slate-400 font-mono">NIM: {s.student_id || s.nim} • {s.department || s.jurusan}</p>
                                                 </button>
                                             ))}
                                         </div>

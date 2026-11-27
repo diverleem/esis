@@ -44,50 +44,50 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // 2. Ambil data mahasiswa dari tabel `mahasiswa`
+        // 2. Ambil data mahasiswa dari tabel `students`
         let studentData = {
-            nama_lengkap: violation.student_name || "Mahasiswa",
-            nim: violation.student_id || "-",
-            jurusan: violation.student_department || "Teknik Informatika",
-            fakultas: "Fakultas Sains dan Teknologi",
-            tahun_masuk: 2021,
-            jenis_kelamin: "L",
+            full_name: violation.student_name || "Mahasiswa",
+            student_id: violation.student_id || "-",
+            department: violation.student_department || "Teknik Informatika",
+            faculty: "Fakultas Sains dan Teknologi",
+            entry_year: 2021,
+            gender: "L",
             email: violation.student_email || "-",
         };
 
         if (violation.student_id) {
             const { data: student } = await supabase
-                .from("mahasiswa")
+                .from("students")
                 .select("*")
-                .eq("nim", violation.student_id)
+                .eq("student_id", violation.student_id)
                 .maybeSingle();
 
             if (student) {
                 studentData = {
-                    nama_lengkap: student.nama_lengkap || studentData.nama_lengkap,
-                    nim: student.nim || studentData.nim,
-                    jurusan: student.jurusan || studentData.jurusan,
-                    fakultas: student.fakultas || studentData.fakultas,
-                    tahun_masuk: student.tahun_masuk || studentData.tahun_masuk,
-                    jenis_kelamin: student.jenis_kelamin || studentData.jenis_kelamin,
+                    full_name: student.full_name || studentData.full_name,
+                    student_id: student.student_id || studentData.student_id,
+                    department: student.department || studentData.department,
+                    faculty: student.faculty || studentData.faculty,
+                    entry_year: student.entry_year || studentData.entry_year,
+                    gender: student.gender || studentData.gender,
                     email: student.email || studentData.email,
                 };
             }
         } else if (violation.student_name && !violation.student_name.includes("Tidak Dikenal")) {
             const { data: student } = await supabase
-                .from("mahasiswa")
+                .from("students")
                 .select("*")
-                .ilike("nama_lengkap", `%${violation.student_name}%`)
+                .ilike("full_name", `%${violation.student_name}%`)
                 .maybeSingle();
 
             if (student) {
                 studentData = {
-                    nama_lengkap: student.nama_lengkap || studentData.nama_lengkap,
-                    nim: student.nim || studentData.nim,
-                    jurusan: student.jurusan || studentData.jurusan,
-                    fakultas: student.fakultas || studentData.fakultas,
-                    tahun_masuk: student.tahun_masuk || studentData.tahun_masuk,
-                    jenis_kelamin: student.jenis_kelamin || studentData.jenis_kelamin,
+                    full_name: student.full_name || studentData.full_name,
+                    student_id: student.student_id || studentData.student_id,
+                    department: student.department || studentData.department,
+                    faculty: student.faculty || studentData.faculty,
+                    entry_year: student.entry_year || studentData.entry_year,
+                    gender: student.gender || studentData.gender,
                     email: student.email || studentData.email,
                 };
             }

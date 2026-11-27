@@ -12,7 +12,7 @@ function getSupabaseClient() {
     return createClient(supabaseUrl, supabaseKey);
 }
 
-// GET /api/mahasiswa?search=...&limit=...
+// GET /api/mahasiswa?search=...&limit=... (Legacy alias for /api/students)
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
@@ -21,12 +21,12 @@ export async function GET(request: NextRequest) {
 
         const supabase = getSupabaseClient();
         let query = supabase
-            .from("mahasiswa")
-            .select("nim, nama_lengkap, jurusan, fakultas, email")
+            .from("students")
+            .select("student_id, full_name, department, faculty, email")
             .limit(limit);
 
         if (search) {
-            query = query.or(`nim.ilike.%${search}%,nama_lengkap.ilike.%${search}%`);
+            query = query.or(`student_id.ilike.%${search}%,full_name.ilike.%${search}%`);
         }
 
         const { data, error } = await query;
@@ -35,9 +35,24 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ success: false, message: error.message }, { status: 500 });
         }
 
+        const mappedData = (data || []).map((s: {
+            student_id: string;
+            full_name: string;
+            department: string;
+            faculty: string;
+            email: string | null;
+        }) => ({
+            ...s,
+            // Backward compatibility aliases
+            nim: s.student_id,
+            nama_lengkap: s.full_name,
+            jurusan: s.department,
+            fakultas: s.faculty,
+        }));
+
         return NextResponse.json({
             success: true,
-            data: data || [],
+            data: mappedData,
         });
     } catch (err: unknown) {
         const errorMsg = err instanceof Error ? err.message : "Terjadi kesalahan server.";

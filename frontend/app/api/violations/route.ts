@@ -146,32 +146,32 @@ export async function POST(request: NextRequest) {
         let resolvedDepartment = rawDepartment ? String(rawDepartment).trim() : null;
         let resolvedEmail = rawEmail ? String(rawEmail).trim() : null;
 
-        // 1. Jika ada NIM yang dikirim, cari data lengkap di tabel mahasiswa
+        // 1. Jika ada NIM / student_id yang dikirim, cari data lengkap di tabel students
         if (resolvedStudentId) {
             const { data: student } = await supabase
-                .from("mahasiswa")
-                .select("nama_lengkap, nim, jurusan, email")
-                .eq("nim", resolvedStudentId)
+                .from("students")
+                .select("full_name, student_id, department, email")
+                .eq("student_id", resolvedStudentId)
                 .maybeSingle();
 
             if (student) {
-                resolvedName = resolvedName !== "Mahasiswa Tidak Terdaftar" ? resolvedName : student.nama_lengkap;
-                resolvedDepartment = resolvedDepartment || student.jurusan;
+                resolvedName = resolvedName !== "Mahasiswa Tidak Terdaftar" ? resolvedName : student.full_name;
+                resolvedDepartment = resolvedDepartment || student.department;
                 resolvedEmail = resolvedEmail || student.email;
             }
         }
         // 2. Jika NIM tidak ada tetapi nama dikenali oleh FaceNet, coba cari berdasarkan kemiripan nama
         else if (resolvedName && resolvedName !== "Mahasiswa Tidak Terdaftar" && !resolvedName.includes("Tidak Dikenal")) {
             const { data: student } = await supabase
-                .from("mahasiswa")
-                .select("nama_lengkap, nim, jurusan, email")
-                .ilike("nama_lengkap", `%${resolvedName}%`)
+                .from("students")
+                .select("full_name, student_id, department, email")
+                .ilike("full_name", `%${resolvedName}%`)
                 .maybeSingle();
 
             if (student) {
-                resolvedStudentId = student.nim;
-                resolvedName = student.nama_lengkap;
-                resolvedDepartment = resolvedDepartment || student.jurusan;
+                resolvedStudentId = student.student_id;
+                resolvedName = student.full_name;
+                resolvedDepartment = resolvedDepartment || student.department;
                 resolvedEmail = resolvedEmail || student.email;
             }
         }
@@ -392,48 +392,48 @@ export async function PATCH(request: NextRequest) {
         if ((status === "verified" || status === "verified_sp1") && !updateData.sp_file_url && body.generate_sp !== false) {
             try {
                 let studentData = {
-                    nama_lengkap: existing.student_name || "Mahasiswa",
-                    nim: existing.student_id || "-",
-                    jurusan: existing.student_department || "Teknik Informatika",
-                    fakultas: "Fakultas Sains dan Teknologi",
-                    tahun_masuk: 2021,
-                    jenis_kelamin: "L",
+                    full_name: existing.student_name || "Mahasiswa",
+                    student_id: existing.student_id || "-",
+                    department: existing.student_department || "Teknik Informatika",
+                    faculty: "Fakultas Sains dan Teknologi",
+                    entry_year: 2021,
+                    gender: "L",
                     email: existing.student_email || "-",
                 };
 
                 if (existing.student_id) {
                     const { data: student } = await supabase
-                        .from("mahasiswa")
+                        .from("students")
                         .select("*")
-                        .eq("nim", existing.student_id)
+                        .eq("student_id", existing.student_id)
                         .maybeSingle();
 
                     if (student) {
                         studentData = {
-                            nama_lengkap: student.nama_lengkap || studentData.nama_lengkap,
-                            nim: student.nim || studentData.nim,
-                            jurusan: student.jurusan || studentData.jurusan,
-                            fakultas: student.fakultas || studentData.fakultas,
-                            tahun_masuk: student.tahun_masuk || studentData.tahun_masuk,
-                            jenis_kelamin: student.jenis_kelamin || studentData.jenis_kelamin,
+                            full_name: student.full_name || studentData.full_name,
+                            student_id: student.student_id || studentData.student_id,
+                            department: student.department || studentData.department,
+                            faculty: student.faculty || studentData.faculty,
+                            entry_year: student.entry_year || studentData.entry_year,
+                            gender: student.gender || studentData.gender,
                             email: student.email || studentData.email,
                         };
                     }
                 } else if (existing.student_name && !existing.student_name.includes("Tidak Dikenal")) {
                     const { data: student } = await supabase
-                        .from("mahasiswa")
+                        .from("students")
                         .select("*")
-                        .ilike("nama_lengkap", `%${existing.student_name}%`)
+                        .ilike("full_name", `%${existing.student_name}%`)
                         .maybeSingle();
 
                     if (student) {
                         studentData = {
-                            nama_lengkap: student.nama_lengkap || studentData.nama_lengkap,
-                            nim: student.nim || studentData.nim,
-                            jurusan: student.jurusan || studentData.jurusan,
-                            fakultas: student.fakultas || studentData.fakultas,
-                            tahun_masuk: student.tahun_masuk || studentData.tahun_masuk,
-                            jenis_kelamin: student.jenis_kelamin || studentData.jenis_kelamin,
+                            full_name: student.full_name || studentData.full_name,
+                            student_id: student.student_id || studentData.student_id,
+                            department: student.department || studentData.department,
+                            faculty: student.faculty || studentData.faculty,
+                            entry_year: student.entry_year || studentData.entry_year,
+                            gender: student.gender || studentData.gender,
                             email: student.email || studentData.email,
                         };
                     }

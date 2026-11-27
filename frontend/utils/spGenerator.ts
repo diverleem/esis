@@ -3,13 +3,20 @@ import fs from "fs/promises";
 import path from "path";
 
 export interface SpStudentData {
-    nama_lengkap: string;
-    nim: string;
+    full_name?: string;
+    student_id?: string;
+    department?: string | null;
+    faculty?: string | null;
+    entry_year?: number | string | null;
+    gender?: string | null;
+    email?: string | null;
+    // Backward compatibility aliases
+    nama_lengkap?: string;
+    nim?: string;
     jurusan?: string | null;
     fakultas?: string | null;
     tahun_masuk?: number | string | null;
     jenis_kelamin?: string | null;
-    email?: string | null;
 }
 
 export interface SpViolationData {
@@ -226,9 +233,13 @@ export async function generateSpPdf(
     y -= 25;
 
     // 4. TUJUAN SURAT
-    const isFemale = (student.jenis_kelamin || "").toUpperCase().startsWith("P");
+    const rawGender = student.gender || student.jenis_kelamin || "";
+    const isFemale =
+        rawGender.toUpperCase().startsWith("P") ||
+        rawGender.toLowerCase().includes("perempuan") ||
+        rawGender.toLowerCase().includes("female");
     const sapaan = isFemale ? "Saudari" : "Saudara";
-    const namaMahasiswa = student.nama_lengkap || "Mahasiswa Terkait";
+    const namaMahasiswa = student.full_name || student.nama_lengkap || "Mahasiswa Terkait";
 
     page1.drawText(`Yth. ${sapaan} ${namaMahasiswa}`, {
         x: MARGIN_LEFT,
@@ -255,11 +266,11 @@ export async function generateSpPdf(
 
     // 6. TABEL / INDENTASI DATA DIRI MAHASISWA
     const studentInfo = [
-        { label: "Nama", value: student.nama_lengkap || "-" },
-        { label: "NIM", value: student.nim || "-" },
-        { label: "Jurusan", value: student.jurusan || "Teknik Informatika" },
-        { label: "Fakultas", value: student.fakultas || "Fakultas Sains dan Teknologi" },
-        { label: "Tahun Masuk", value: student.tahun_masuk ? String(student.tahun_masuk) : "-" },
+        { label: "Nama", value: student.full_name || student.nama_lengkap || "-" },
+        { label: "NIM", value: student.student_id || student.nim || "-" },
+        { label: "Jurusan", value: student.department || student.jurusan || "Teknik Informatika" },
+        { label: "Fakultas", value: student.faculty || student.fakultas || "Fakultas Sains dan Teknologi" },
+        { label: "Tahun Masuk", value: student.entry_year ? String(student.entry_year) : (student.tahun_masuk ? String(student.tahun_masuk) : "-") },
         { label: "Email", value: student.email || "-" },
     ];
 
